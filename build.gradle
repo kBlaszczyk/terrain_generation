@@ -1,0 +1,122 @@
+import org.gradle.internal.os.OperatingSystem
+
+plugins {
+	id "application"
+	id "idea"
+	id "org.jetbrains.kotlin.jvm" version "1.3.50"
+}
+
+switch (OperatingSystem.current()) {
+	case OperatingSystem.LINUX:
+		project.ext.lwjgl_natives = "natives-linux"
+		break
+	case OperatingSystem.WINDOWS:
+		project.ext.lwjgl_natives = "natives-windows"
+		break
+}
+
+group "de.orchound.rendering"
+version "1.0-SNAPSHOT"
+
+println """
+	|- $project.title -
+    |$description
+    |
+	|Group: $group
+    |Version: $version
+    |Vendor: $project.vendor
+	|
+	|Gradle version: $gradle.gradleVersion
+	|Gradle home: $gradle.gradleHomeDir
+	|Gradle user directory: $gradle.gradleUserHomeDir
+	|Running script: ${relativePath(buildFile)}
+""".stripMargin()
+
+mainClassName = project.main_class
+
+// -------------------------------------------------------------
+// --- Repositories and Dependencies ---------------------------
+// -------------------------------------------------------------
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+
+	compile(
+			"org.joml:joml:$joml_version",
+	)
+
+	// LWJGL dependencies <https://www.lwjgl.org/customize>
+	implementation platform("org.lwjgl:lwjgl-bom:$lwjgl_version")
+
+	compile(
+			"org.lwjgl:lwjgl",
+			"org.lwjgl:lwjgl-glfw",
+			"org.lwjgl:lwjgl-opengl",
+			"org.lwjgl:lwjgl-stb",
+	)
+
+	runtimeOnly(
+			"org.lwjgl:lwjgl::$lwjgl_natives",
+			"org.lwjgl:lwjgl-glfw::$lwjgl_natives",
+			"org.lwjgl:lwjgl-opengl::$lwjgl_natives",
+			"org.lwjgl:lwjgl-stb::$lwjgl_natives",
+	)
+}
+
+// -------------------------------------------------------------
+// --- Tasks ---------------------------------------------------
+// -------------------------------------------------------------
+
+jar {
+	manifest {
+		attributes "Main-Class": project.main_class
+	}
+}
+
+task fatJar(type: Jar) {
+	setArchivesBaseName("$project.name-fat")
+
+	manifest {
+		attributes "Main-Class": project.main_class
+	}
+
+	from {
+		configurations.runtimeClasspath.collect {
+			it.isDirectory() ? it : zipTree(it)
+		}
+	}
+
+	with jar
+
+	configure {
+		group = "build"
+		description = "Create an executable jar."
+	}
+}
+
+compileKotlin {
+	kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+	kotlinOptions.jvmTarget = "1.8"
+}
+
+wrapper {
+	gradleVersion = "5.6.2"
+	distributionType = Wrapper.DistributionType.ALL
+}
+
+idea {
+	module {
+		jdkName = "1.8"
+
+		downloadJavadoc = true
+		downloadSources = true
+
+		iml {}
+	}
+}
