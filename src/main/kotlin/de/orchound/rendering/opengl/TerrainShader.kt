@@ -1,19 +1,27 @@
 package de.orchound.rendering.opengl
 
+import org.joml.Matrix4f
 import org.lwjgl.opengl.GL20.*
 
 
-class QuadShader {
+class TerrainShader {
 
 	private val handle: Int
+
+	private val modelViewLocation: Int
+	private val modelViewProjectionLocation: Int
 	private val textureLocation: Int
 
+	private val matrixBuffer = FloatArray(16)
+
 	init {
-		val vertexShaderSource = loadShaderSource("/shader/QuadShader_vs.glsl")
-		val fragmentShaderSource = loadShaderSource("/shader/QuadShader_fs.glsl")
+		val vertexShaderSource = loadShaderSource("/shader/TerrainShader_vs.glsl")
+		val fragmentShaderSource = loadShaderSource("/shader/TerrainShader_fs.glsl")
 
 		handle = createShaderProgram(vertexShaderSource, fragmentShaderSource)
 
+		modelViewLocation = getUniformLocation("model_view")
+		modelViewProjectionLocation = getUniformLocation("model_view_projection")
 		textureLocation = glGetUniformLocation(handle, "texture_sampler")
 		glUniform1i(textureLocation, 0)
 	}
@@ -21,9 +29,25 @@ class QuadShader {
 	fun bind() = glUseProgram(handle)
 	fun unbind() = glUseProgram(0)
 
+	/**
+	 * Sets the Uniform variable for the Model matrix.
+	 * This method needs to be called after the shader has been bound.
+	 */
+	fun setModelView(matrix: Matrix4f) = setUniformMatrix(modelViewLocation, matrix)
+	fun setModelViewProjection(matrix: Matrix4f) = setUniformMatrix(modelViewProjectionLocation, matrix)
+
 	fun setTexture(textureHandle: Int) {
 		glActiveTexture(GL_TEXTURE0)
 		glBindTexture(GL_TEXTURE_2D, textureHandle)
+	}
+
+	private fun getUniformLocation(name: String) = glGetUniformLocation(handle, name)
+
+	private fun setUniformMatrix(location: Int, matrix: Matrix4f) {
+		if (location != -1) {
+			matrix.get(matrixBuffer)
+			glUniformMatrix4fv(location, false, matrixBuffer)
+		}
 	}
 
 	private fun createShaderProgram(vertexShaderSource: Array<String>, fragmentShaderSource: Array<String>): Int {
@@ -35,6 +59,7 @@ class QuadShader {
 		glAttachShader(programHandle, fragmentShaderHandle)
 
 		glBindAttribLocation(programHandle, 0, "in_position")
+		glBindAttribLocation(programHandle, 1, "in_texcoords")
 
 		glLinkProgram(programHandle)
 
