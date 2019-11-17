@@ -1,5 +1,6 @@
 package de.orchound.rendering
 
+import de.orchound.rendering.display.Keys
 import de.orchound.rendering.opengl.TerrainShader
 import de.orchound.rendering.terrain.TerrainGenerator
 import de.orchound.rendering.terrain.TerrainLayout
@@ -7,12 +8,14 @@ import de.orchound.rendering.terrain.TerrainSceneObject
 
 
 object TerrainApplication {
-	private val window = Window("Terrain Generation", 800, 800)
-	private val camera = Camera(window.aspectRatio, 90f)
-	private val shader = TerrainShader()
+	private val camera = Camera(Window.aspectRatio, 90f)
+	private val shader: TerrainShader
 	private val terrain: TerrainSceneObject
 
 	init {
+		Window.initialize()
+		shader = TerrainShader()
+
 		val terrainLayout = TerrainLayout().apply {
 			this.addLayer("water deep", 0.3f, Color.fromHex("1824A9"))
 			this.addLayer("water", 0.5f, Color.fromHex("3662D0"))
@@ -29,26 +32,26 @@ object TerrainApplication {
 	}
 
 	fun run() {
-		while (!window.shouldClose()) {
+		while (!Window.getPressedKeys().contains(Keys.Q) && !Window.shouldClose()) {
 			update()
 			render()
 		}
-
-		window.destroy()
+		Window.destroy()
 	}
 
 	private fun update() {
+		camera.update()
 		terrain.preparePerspective(camera)
 	}
 
 	private fun render() {
-		window.prepareFrame()
+		Window.prepareFrame()
 
 		shader.bind()
 		terrain.prepareShader(shader)
 		terrain.draw()
 		shader.unbind()
 
-		window.finishFrame()
+		Window.finishFrame()
 	}
 }

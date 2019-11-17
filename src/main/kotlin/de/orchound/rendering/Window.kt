@@ -1,17 +1,26 @@
 package de.orchound.rendering
 
+import de.orchound.rendering.display.GLFWKeyMapper
+import de.orchound.rendering.display.Keys
+import org.lwjgl.glfw.*
 import org.lwjgl.glfw.GLFW.*
-import org.lwjgl.glfw.GLFWErrorCallback
-import org.lwjgl.glfw.GLFWFramebufferSizeCallback
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11.*
+import java.util.*
 
 
-class Window(title: String, width: Int, height: Int) {
+object Window {
 
+	val width = 800
+	val height = 800
 	val aspectRatio = width.toFloat() / height
 
-	var title: String = title
+	var mousePosX = 0.0
+		private set
+	var mousePosY = 0.0
+		private set
+
+	var title: String = "Terrain Generation"
 		set(value) {
 			glfwSetWindowTitle(handle, value)
 			field = value
@@ -19,13 +28,32 @@ class Window(title: String, width: Int, height: Int) {
 
 	private var handle: Long = 0
 
+	private val pressedKeys = HashSet<Keys>()
+
 	private var errorCallback = GLFWErrorCallback.createPrint(System.err)
 	private var framebufferSizeCallback = GLFWFramebufferSizeCallback.create { window, newWidth, newHeight ->
 		if (window == handle)
 			glViewport(0, 0, newWidth, newHeight)
 	}
 
-	init {
+	private val keyCallback = GLFWKeyCallback.create { _, key, scancode, action, _ ->
+		when (action) {
+			GLFW_PRESS -> pressedKeys.add(GLFWKeyMapper[key])
+			GLFW_RELEASE -> pressedKeys.remove(GLFWKeyMapper[key])
+		}
+	}
+	private val mouseButtonCallback = GLFWMouseButtonCallback.create { _, button, action, _ ->
+		when (action) {
+			GLFW_PRESS -> pressedKeys.add(GLFWKeyMapper[button])
+			GLFW_RELEASE -> pressedKeys.remove(GLFWKeyMapper[button])
+		}
+	}
+	private val mousePositionCallback = GLFWCursorPosCallback.create { _, xPos, yPos ->
+		mousePosX = xPos
+		mousePosY = yPos
+	}
+
+	fun initialize() {
 		if (!glfwInit())
 			throw RuntimeException("Failed to initialize GLFW")
 
@@ -42,13 +70,18 @@ class Window(title: String, width: Int, height: Int) {
 			throw Exception("Failed to create window")
 
 		glfwSetFramebufferSizeCallback(handle, framebufferSizeCallback)
-		glfwSetInputMode(handle, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		glfwSetKeyCallback(handle, keyCallback)
+		glfwSetMouseButtonCallback(handle, mouseButtonCallback)
+		glfwSetCursorPosCallback(handle, mousePositionCallback)
+		//glfwSetInputMode(handle, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		glfwSetInputMode(handle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 		glfwMakeContextCurrent(handle)
 		GL.createCapabilities()
 		initRendering()
 	}
 
+	fun getPressedKeys(): Set<Keys> = pressedKeys
 	fun shouldClose() = glfwWindowShouldClose(handle)
 
 	fun prepareFrame() {
@@ -61,6 +94,9 @@ class Window(title: String, width: Int, height: Int) {
 	}
 
 	fun destroy() {
+		keyCallback.close()
+		mouseButtonCallback.close()
+		mousePositionCallback.close()
 		errorCallback.close()
 		framebufferSizeCallback.close()
 
@@ -70,6 +106,7 @@ class Window(title: String, width: Int, height: Int) {
 
 	private fun initRendering() {
 		glClearColor(0f, 0f, 0f, 1f)
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 		glEnable(GL_DEPTH_TEST)
 		glEnable(GL_CULL_FACE)
 		glCullFace(GL_BACK)

@@ -71,9 +71,9 @@ class TerrainGenerator(val width: Int, val terrainLayout: TerrainLayout) {
 
 		for (z in 0 until heightMap.width) {
 			for (x in 0 until heightMap.width) {
-				vertexBuffer.put(x - heightMap.width / 2f)
+				vertexBuffer.put(x - (heightMap.width - 1) / 2f)
 				vertexBuffer.put(heightMap.getValue(x, z))
-				vertexBuffer.put(z - heightMap.width / 2f)
+				vertexBuffer.put(z - (heightMap.width - 1) / 2f)
 			}
 		}
 
