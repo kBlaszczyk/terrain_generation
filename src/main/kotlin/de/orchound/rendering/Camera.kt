@@ -9,7 +9,7 @@ class Camera(aspectRatio: Float, fov: Float) {
 
 	private val up = UP
 	private val center = Vector3f(0f, 0f, 0f)
-	private val position = Vector3f(0f, 10f, 10f)
+	private val position = Vector3f(0f, 25f, 10f)
 	private var yaw = 0f
 	private var pitch = 0f
 

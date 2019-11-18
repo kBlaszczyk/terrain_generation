@@ -59,7 +59,8 @@ class TerrainShader {
 		glAttachShader(programHandle, fragmentShaderHandle)
 
 		glBindAttribLocation(programHandle, 0, "in_position")
-		glBindAttribLocation(programHandle, 1, "in_texcoords")
+		glBindAttribLocation(programHandle, 1, "in_normal")
+		glBindAttribLocation(programHandle, 2, "in_texcoords")
 
 		glLinkProgram(programHandle)
 

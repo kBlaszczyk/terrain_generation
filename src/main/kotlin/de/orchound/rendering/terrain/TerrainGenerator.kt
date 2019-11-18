@@ -4,10 +4,15 @@ import de.orchound.rendering.Color
 import de.orchound.rendering.opengl.OpenGLMesh
 import de.orchound.rendering.opengl.OpenGLTexture
 import de.orchound.rendering.opengl.OpenGLType
+import de.orchound.rendering.toByteBuffer
+import de.orchound.rendering.vec3Normalization
+import org.joml.Vector3f
 import java.nio.ByteBuffer
+import java.nio.FloatBuffer
+import java.nio.IntBuffer
 
 
-class TerrainGenerator(val width: Int, val terrainLayout: TerrainLayout) {
+class TerrainGenerator(val width: Int, val terrainLayout: TerrainLayout, val heightFactor: Float) {
 
 	fun generateTerrain(): TerrainSceneObject {
 		val noiseMap = NoiseGenerator.generateNoiseMap(width, 6f)
@@ -47,32 +52,38 @@ class TerrainGenerator(val width: Int, val terrainLayout: TerrainLayout) {
 	private fun createMesh(heightMap: HeightMap): OpenGLMesh {
 		val mesh = OpenGLMesh()
 
+		val vertexData = createVertices(heightMap)
+		val indices = createIndices(heightMap.width)
+		val normalData = createNormals(vertexData, indices)
+
 		mesh.setVertexAttribute(
-			byteArrayToInvertedEndiannessByteBuffer(createVertices(heightMap), 4),
-			0, OpenGLType.FLOAT,3, false
+			vertexData.toByteBuffer(true), 0, OpenGLType.FLOAT,
+			3, false
 		)
 
 		mesh.setVertexAttribute(
-			byteArrayToInvertedEndiannessByteBuffer(createUVs(heightMap.width), 4),
-			1, OpenGLType.FLOAT, 2, false
+			normalData.toByteBuffer(true), 1, OpenGLType.FLOAT,
+			3, false
 		)
 
-		mesh.setIndices(
-			byteArrayToInvertedEndiannessByteBuffer(createIndices(heightMap.width), 4),
-			OpenGLType.UNSIGNED_INT
+		mesh.setVertexAttribute(
+			createUVs(heightMap.width).toByteBuffer(true),
+			2, OpenGLType.FLOAT, 2, false
 		)
+
+		mesh.setIndices(indices.toByteBuffer(true), OpenGLType.UNSIGNED_INT)
 
 		return mesh
 	}
 
-	private fun createVertices(heightMap: HeightMap): ByteArray {
-		val vertexData = ByteArray(heightMap.width * heightMap.height * 3 * 4)
-		val vertexBuffer = ByteBuffer.wrap(vertexData).asFloatBuffer()
+	private fun createVertices(heightMap: HeightMap): FloatArray {
+		val vertexData = FloatArray(heightMap.width * heightMap.width * 3)
+		val vertexBuffer = FloatBuffer.wrap(vertexData)
 
 		for (z in 0 until heightMap.width) {
 			for (x in 0 until heightMap.width) {
 				vertexBuffer.put(x - (heightMap.width - 1) / 2f)
-				vertexBuffer.put(heightMap.getValue(x, z))
+				vertexBuffer.put(heightMap.getValue(x, z) * heightFactor)
 				vertexBuffer.put(z - (heightMap.width - 1) / 2f)
 			}
 		}
@@ -80,9 +91,38 @@ class TerrainGenerator(val width: Int, val terrainLayout: TerrainLayout) {
 		return vertexData
 	}
 
-	private fun createUVs(terrainWidth: Int): ByteArray {
-		val uvData = ByteArray(terrainWidth * terrainWidth * 2 * 4)
-		val uvBuffer = ByteBuffer.wrap(uvData).asFloatBuffer()
+	private fun createNormals(vertexData: FloatArray, indices: IntArray): FloatArray {
+		val normalData = FloatArray(vertexData.size)
+
+		for (triangle in indices.indices step 3) {
+			val triangleVertices = (0 .. 2).map {
+				val vertexIndex = indices[triangle + it] * 3
+				val vertex = Vector3f(
+					vertexData[vertexIndex], vertexData[vertexIndex + 1], vertexData[vertexIndex + 2]
+				)
+				Pair(vertexIndex, vertex)
+			}
+
+			val normal = triangleVertices[1].second.sub(triangleVertices[0].second)
+				.cross(triangleVertices[2].second.sub(triangleVertices[0].second))
+
+			for (vertex in triangleVertices)
+				addNormalToVertex(normal, normalData, vertex.first)
+		}
+
+		normalData.vec3Normalization()
+		return normalData
+	}
+
+	private fun addNormalToVertex(normal: Vector3f, normalData: FloatArray, vertexIndex: Int) {
+		normalData[vertexIndex] += normal.x
+		normalData[vertexIndex + 1] += normal.y
+		normalData[vertexIndex + 2] += normal.z
+	}
+
+	private fun createUVs(terrainWidth: Int): FloatArray {
+		val uvData = FloatArray(terrainWidth * terrainWidth * 2)
+		val uvBuffer = FloatBuffer.wrap(uvData)
 
 		for (z in 0 until terrainWidth) {
 			for (x in 0 until terrainWidth) {
@@ -94,10 +134,10 @@ class TerrainGenerator(val width: Int, val terrainLayout: TerrainLayout) {
 		return uvData
 	}
 
-	private fun createIndices(terrainWidth: Int): ByteArray {
+	private fun createIndices(terrainWidth: Int): IntArray {
 		val indicesCount = (terrainWidth - 1) * (terrainWidth - 1) * 6
-		val indexData = ByteArray(indicesCount * 4)
-		val indexBuffer = ByteBuffer.wrap(indexData).asIntBuffer()
+		val indices = IntArray(indicesCount)
+		val indexBuffer = IntBuffer.wrap(indices)
 		for (z in 0 until terrainWidth - 1) {
 			for (x in 0 until terrainWidth - 1) {
 				val xzOffset = z * terrainWidth + x
@@ -110,17 +150,6 @@ class TerrainGenerator(val width: Int, val terrainLayout: TerrainLayout) {
 			}
 		}
 
-		return indexData
-	}
-
-	private fun byteArrayToInvertedEndiannessByteBuffer(data: ByteArray, formatSize: Int): ByteBuffer {
-		val byteBuffer = ByteBuffer.allocateDirect(data.size)
-		for (element in data.indices step formatSize) {
-			for (index in formatSize - 1 downTo 0) {
-				byteBuffer.put(data[element + index])
-			}
-		}
-		byteBuffer.flip()
-		return byteBuffer
+		return indices
 	}
 }
