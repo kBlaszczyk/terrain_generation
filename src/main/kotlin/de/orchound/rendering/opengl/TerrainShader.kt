@@ -1,6 +1,7 @@
 package de.orchound.rendering.opengl
 
 import org.joml.Matrix4f
+import org.joml.Vector3f
 import org.lwjgl.opengl.GL20.*
 
 
@@ -10,9 +11,11 @@ class TerrainShader {
 
 	private val modelViewLocation: Int
 	private val modelViewProjectionLocation: Int
+	private val csLightDirectionLocation: Int
 	private val textureLocation: Int
 
 	private val matrixBuffer = FloatArray(16)
+	private val vectorBuffer = FloatArray(3)
 
 	init {
 		val vertexShaderSource = loadShaderSource("/shader/TerrainShader_vs.glsl")
@@ -22,6 +25,7 @@ class TerrainShader {
 
 		modelViewLocation = getUniformLocation("model_view")
 		modelViewProjectionLocation = getUniformLocation("model_view_projection")
+		csLightDirectionLocation = getUniformLocation("light_direction_cs")
 		textureLocation = glGetUniformLocation(handle, "texture_sampler")
 		glUniform1i(textureLocation, 0)
 	}
@@ -35,6 +39,7 @@ class TerrainShader {
 	 */
 	fun setModelView(matrix: Matrix4f) = setUniformMatrix(modelViewLocation, matrix)
 	fun setModelViewProjection(matrix: Matrix4f) = setUniformMatrix(modelViewProjectionLocation, matrix)
+	fun setCsLightDirection(vector: Vector3f) = setUniformVector(csLightDirectionLocation, vector)
 
 	fun setTexture(textureHandle: Int) {
 		glActiveTexture(GL_TEXTURE0)
@@ -50,6 +55,15 @@ class TerrainShader {
 		}
 	}
 
+	private fun setUniformVector(location: Int, vector: Vector3f) {
+		if (location != -1) {
+			vectorBuffer[0] = vector.x
+			vectorBuffer[1] = vector.y
+			vectorBuffer[2] = vector.z
+			glUniform3fv(location, vectorBuffer)
+		}
+	}
+
 	private fun createShaderProgram(vertexShaderSource: Array<String>, fragmentShaderSource: Array<String>): Int {
 		val vertexShaderHandle = compileShader(vertexShaderSource, GL_VERTEX_SHADER)
 		val fragmentShaderHandle = compileShader(fragmentShaderSource, GL_FRAGMENT_SHADER)
@@ -58,9 +72,9 @@ class TerrainShader {
 		glAttachShader(programHandle, vertexShaderHandle)
 		glAttachShader(programHandle, fragmentShaderHandle)
 
-		glBindAttribLocation(programHandle, 0, "in_position")
-		glBindAttribLocation(programHandle, 1, "in_normal")
-		glBindAttribLocation(programHandle, 2, "in_texcoords")
+		glBindAttribLocation(programHandle, 0, "position_ms")
+		glBindAttribLocation(programHandle, 1, "normal_ms")
+		glBindAttribLocation(programHandle, 2, "texcoords")
 
 		glLinkProgram(programHandle)
 

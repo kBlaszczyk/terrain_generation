@@ -104,7 +104,7 @@ class TerrainGenerator(val width: Int, val terrainLayout: TerrainLayout, val hei
 			}
 
 			val normal = triangleVertices[1].second.sub(triangleVertices[0].second)
-				.cross(triangleVertices[2].second.sub(triangleVertices[0].second))
+				.cross(triangleVertices[2].second.sub(triangleVertices[0].second)).normalize()
 
 			for (vertex in triangleVertices)
 				addNormalToVertex(normal, normalData, vertex.first)

@@ -42,6 +42,7 @@ object TerrainApplication {
 	private fun update() {
 		camera.update()
 		terrain.preparePerspective(camera)
+		terrain.update()
 	}
 
 	private fun render() {
