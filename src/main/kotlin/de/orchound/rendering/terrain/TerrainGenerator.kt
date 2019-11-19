@@ -12,7 +12,7 @@ import java.nio.FloatBuffer
 import java.nio.IntBuffer
 
 
-class TerrainGenerator(val width: Int, val terrainLayout: TerrainLayout, val heightFactor: Float) {
+class TerrainGenerator(val width: Int, val heightFactor: Float) {
 
 	fun generateTerrain(): Pair<OpenGLMesh, OpenGLTexture> {
 		val noiseMap = NoiseGenerator.generateNoiseMap(width, 6f)
@@ -23,19 +23,9 @@ class TerrainGenerator(val width: Int, val terrainLayout: TerrainLayout, val hei
 
 	private fun createTexture(heightMap: HeightMap): OpenGLTexture {
 		val data = ByteBuffer.allocateDirect(heightMap.width * heightMap.width * 3)
-		heightMapToColors(heightMap, data)
-		//heightMapToGreyscale(heightMap, data)
+		//heightMapToColors(heightMap, data)
+		heightMapToGreyscale(heightMap, data)
 		return OpenGLTexture(heightMap.width, heightMap.width, data)
-	}
-
-	private fun heightMapToColors(heightMap: HeightMap, dest: ByteBuffer) {
-		for (y in 0 until heightMap.width) {
-			for (x in 0 until heightMap.width) {
-				val color = terrainLayout.getColor(heightMap.getValue(x, y))
-				dest.put(color.toRgbBytes())
-			}
-		}
-		dest.flip()
 	}
 
 	private fun heightMapToGreyscale(heightMap: HeightMap, dest: ByteBuffer) {
@@ -43,7 +33,8 @@ class TerrainGenerator(val width: Int, val terrainLayout: TerrainLayout, val hei
 			for (x in 0 until heightMap.width) {
 				val normalizedHeight = heightMap.getValue(x, y) / heightMap.maxHeight
 				val color = Color.fromNormalizedGrey(normalizedHeight)
-				dest.put(color.toRgbBytes())
+				val rgb = color.toRgbBytes(ByteArray(3))
+				dest.put(color.toRgbBytes(rgb))
 			}
 		}
 		dest.flip()

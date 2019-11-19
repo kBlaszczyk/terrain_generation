@@ -12,6 +12,8 @@ class TerrainShader {
 	private val modelViewLocation: Int
 	private val modelViewProjectionLocation: Int
 	private val csLightDirectionLocation: Int
+	private val layerColorLocations: IntArray
+	private val layerLimitLocations: IntArray
 	private val textureLocation: Int
 
 	private val matrixBuffer = FloatArray(16)
@@ -26,6 +28,13 @@ class TerrainShader {
 		modelViewLocation = getUniformLocation("model_view")
 		modelViewProjectionLocation = getUniformLocation("model_view_projection")
 		csLightDirectionLocation = getUniformLocation("light_direction_cs")
+		layerColorLocations = (0 until MAX_LAYERS).map {
+			getUniformLocation("layer_colors[$it]")
+		}.toIntArray()
+		layerLimitLocations = (0 until MAX_LAYERS).map {
+			getUniformLocation("layer_limits[$it]")
+		}.toIntArray()
+
 		textureLocation = glGetUniformLocation(handle, "texture_sampler")
 		glUniform1i(textureLocation, 0)
 	}
@@ -40,6 +49,17 @@ class TerrainShader {
 	fun setModelView(matrix: Matrix4f) = setUniformMatrix(modelViewLocation, matrix)
 	fun setModelViewProjection(matrix: Matrix4f) = setUniformMatrix(modelViewProjectionLocation, matrix)
 	fun setCsLightDirection(vector: Vector3f) = setUniformVector(csLightDirectionLocation, vector)
+
+	fun setLayerColors(colors: Array<Vector3f>) {
+		for (index in colors.indices) {
+			setUniformVector(layerColorLocations[index], colors[index])
+		}
+	}
+
+	fun setLayerLimits(limits: FloatArray) {
+		for (index in limits.indices)
+			setUniformFloat(layerLimitLocations[index], limits[index])
+	}
 
 	fun setTexture(textureHandle: Int) {
 		glActiveTexture(GL_TEXTURE0)
@@ -62,6 +82,11 @@ class TerrainShader {
 			vectorBuffer[2] = vector.z
 			glUniform3fv(location, vectorBuffer)
 		}
+	}
+
+	private fun setUniformFloat(location: Int, value: Float) {
+		if (location != -1)
+			glUniform1f(location, value)
 	}
 
 	private fun createShaderProgram(vertexShaderSource: Array<String>, fragmentShaderSource: Array<String>): Int {
@@ -131,5 +156,9 @@ class TerrainShader {
 		return javaClass.getResourceAsStream(resource).use { inputStream ->
 			inputStream.bufferedReader().readLines()
 		}.map { "$it\n" }.toTypedArray()
+	}
+
+	companion object {
+		const val MAX_LAYERS = 10
 	}
 }

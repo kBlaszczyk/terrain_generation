@@ -20,23 +20,29 @@ object TerrainApplication {
 
 	private val lightDirection = Vector3f(-10f)
 	private val csLightDirection = Vector3f()
+	private val layerColors = Array(10) { Vector3f() }
+	private val layerLimits = FloatArray(10)
 
 	init {
 		Window.initialize()
 		shader = TerrainShader()
 
 		val terrainLayout = TerrainLayout().apply {
-			this.addLayer("water deep", 0.3f, Color.fromHex("1824A9"))
-			this.addLayer("water", 0.5f, Color.fromHex("3662D0"))
-			this.addLayer("sand", 0.6f, Color.fromHex("E9E19E"))
-			this.addLayer("grass low", 0.8f, Color.fromHex("73CB1D"))
-			this.addLayer("grass high", 1.3f, Color.fromHex("50881B"))
-			this.addLayer("rocks", 1.5f, Color.fromHex("BD7118"))
-			this.addLayer("mountain", 1.8f, Color.fromHex("6F6860"))
-			this.addLayer("mountain high", 1.9f, Color.fromHex("2E3436"))
-			this.addLayer("snow", 2f, Color.fromHex("F0EBE2"))
+			this.addLayer("water deep", 5f, Color.fromHex("1824A9"))
+			this.addLayer("water", 9f, Color.fromHex("3662D0"))
+			this.addLayer("sand", 10f, Color.fromHex("E9E19E"))
+			this.addLayer("grass low", 12f, Color.fromHex("73CB1D"))
+			this.addLayer("grass high", 14f, Color.fromHex("50881B"))
+			this.addLayer("rocks", 16f, Color.fromHex("BD7118"))
+			this.addLayer("mountain", 20f, Color.fromHex("6F6860"))
+			this.addLayer("mountain high", 24f, Color.fromHex("2E3436"))
+			this.addLayer("snow", 25f, Color.fromHex("F0EBE2"))
 		}
-		val generator = TerrainGenerator(terrainWidth, terrainLayout, 8f)
+
+		terrainLayout.getColors(layerColors)
+		terrainLayout.getLimits(layerLimits)
+
+		val generator = TerrainGenerator(terrainWidth, 16f)
 		val meshTexturePair = generator.generateTerrain()
 		terrains = getTerrainsFromModel(meshTexturePair.first)
 		terrainTexture = meshTexturePair.second
@@ -62,6 +68,9 @@ object TerrainApplication {
 
 		shader.setCsLightDirection(csLightDirection)
 		shader.setTexture(terrainTexture.handle)
+		shader.setLayerColors(layerColors)
+		shader.setLayerLimits(layerLimits)
+
 		terrains.forEach(TerrainSceneObject::draw)
 
 		shader.unbind()

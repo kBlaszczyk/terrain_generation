@@ -1,5 +1,8 @@
 package de.orchound.rendering
 
+import org.joml.Vector3f
+import org.joml.Vector4f
+
 
 class Color(r: Int, g: Int, b: Int, a: Int = 255) {
 
@@ -19,21 +22,21 @@ class Color(r: Int, g: Int, b: Int, a: Int = 255) {
 		require(listOf(r, g, b, a).all { it in 0 .. 255 })
 	}
 
-	fun toRgbaBytes(): ByteArray {
-		return ByteArray(3).apply {
-			this[0] = r
-			this[1] = g
-			this[2] = b
-			this[3] = a
-		}
+	fun toRgbaBytes(dest: ByteArray) = dest.apply {
+		dest[0] = r
+		dest[1] = g
+		dest[2] = b
+		dest[3] = a
 	}
-	fun toRgbBytes(): ByteArray {
-		return ByteArray(3).apply {
-			this[0] = r
-			this[1] = g
-			this[2] = b
-		}
+
+	fun toRgbBytes(dest: ByteArray) = dest.apply {
+		dest[0] = r
+		dest[1] = g
+		dest[2] = b
 	}
+
+	fun toRgbVector(dest: Vector3f): Vector3f = dest.set(rNormalized, gNormalized, bNormalized)
+	fun toRgbaVector(dest: Vector4f): Vector4f = dest.set(rNormalized, gNormalized, bNormalized, aNormalized)
 
 	companion object {
 		fun fromNormalizedRgba(r: Float, g: Float, b: Float, a: Float = 1f): Color {
