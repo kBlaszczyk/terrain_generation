@@ -14,11 +14,11 @@ import java.nio.IntBuffer
 
 class TerrainGenerator(val width: Int, val terrainLayout: TerrainLayout, val heightFactor: Float) {
 
-	fun generateTerrain(): TerrainSceneObject {
+	fun generateTerrain(): Pair<OpenGLMesh, OpenGLTexture> {
 		val noiseMap = NoiseGenerator.generateNoiseMap(width, 6f)
 		val heightMap = HeightMap(noiseMap.width, noiseMap.data)
 
-		return TerrainSceneObject(createMesh(heightMap), createTexture(heightMap))
+		return Pair(createMesh(heightMap), createTexture(heightMap))
 	}
 
 	private fun createTexture(heightMap: HeightMap): OpenGLTexture {

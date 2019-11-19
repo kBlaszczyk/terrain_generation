@@ -17,7 +17,7 @@ object NoiseGenerator {
 				val sampleY = scale * y / (width - 1)
 
 				val perlinValue = STBPerlin.stb_perlin_fbm_noise3(
-					sampleX, sampleY, 0f, 2f, 0.5f, 5
+					sampleX, sampleY, 0f, 4f, 0.3f, 6
 				)
 				dataBuffer.put(perlinValue)
 			}

@@ -1,10 +1,13 @@
 package de.orchound.rendering
 
 import de.orchound.rendering.display.Keys
+import de.orchound.rendering.opengl.OpenGLMesh
+import de.orchound.rendering.opengl.OpenGLTexture
 import de.orchound.rendering.opengl.TerrainShader
 import de.orchound.rendering.terrain.TerrainGenerator
 import de.orchound.rendering.terrain.TerrainLayout
 import de.orchound.rendering.terrain.TerrainSceneObject
+import org.joml.Matrix4f
 import org.joml.Vector3f
 
 
@@ -12,7 +15,11 @@ object TerrainApplication {
 	private val terrainWidth = 256
 	private val camera = Camera(Window.aspectRatio, 90f, terrainWidth.toFloat())
 	private val shader: TerrainShader
-	private val terrain: TerrainSceneObject
+	private val terrains: Collection<TerrainSceneObject>
+	private val terrainTexture: OpenGLTexture
+
+	private val lightDirection = Vector3f(-10f)
+	private val csLightDirection = Vector3f()
 
 	init {
 		Window.initialize()
@@ -30,9 +37,9 @@ object TerrainApplication {
 			this.addLayer("snow", 2f, Color.fromHex("F0EBE2"))
 		}
 		val generator = TerrainGenerator(terrainWidth, terrainLayout, 8f)
-		terrain = generator.generateTerrain()
-		terrain.camera = camera
-		terrain.shader = shader
+		val meshTexturePair = generator.generateTerrain()
+		terrains = getTerrainsFromModel(meshTexturePair.first)
+		terrainTexture = meshTexturePair.second
 	}
 
 	fun run() {
@@ -45,24 +52,34 @@ object TerrainApplication {
 
 	private fun update() {
 		camera.update()
-		terrain.update()
+		camera.getView(Matrix4f()).transformDirection(lightDirection, csLightDirection).normalize()
+		terrains.forEach(TerrainSceneObject::update)
 	}
 
 	private fun render() {
 		Window.prepareFrame()
 		shader.bind()
 
-		for (i in -1 .. 1) {
-			for (j in -1 .. 1) {
-				val offset = Vector3f(
-					(i * (terrainWidth - 1)).toFloat(), 0f, (j * (terrainWidth - 1)).toFloat()
-				)
-				terrain.translate(offset)
-				terrain.draw()
-			}
-		}
+		shader.setCsLightDirection(csLightDirection)
+		shader.setTexture(terrainTexture.handle)
+		terrains.forEach(TerrainSceneObject::draw)
 
 		shader.unbind()
 		Window.finishFrame()
+	}
+
+	private fun getTerrainsFromModel(mesh: OpenGLMesh): Collection<TerrainSceneObject> {
+		val terrains = ArrayList<TerrainSceneObject>(9)
+		for (i in -1 .. 1) {
+			for (j in -1 .. 1) {
+				val terrain = TerrainSceneObject(mesh, camera, shader)
+				val offset = Vector3f(
+					(i * (terrainWidth - 1)).toFloat(), 0f, (j * (terrainWidth - 1)).toFloat()
+				)
+				terrain.translation(offset)
+				terrains.add(terrain)
+			}
+		}
+		return terrains
 	}
 }
