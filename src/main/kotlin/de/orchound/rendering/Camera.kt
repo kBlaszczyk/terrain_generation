@@ -5,17 +5,20 @@ import org.joml.Matrix4f
 import org.joml.Vector3f
 
 
-class Camera(aspectRatio: Float, fov: Float) {
+class Camera(aspectRatio: Float, fov: Float, private val boundary: Float) {
+
+	private val position: Vector3f = Vector3f(0f, 25f, 10f)
 
 	private val up = UP
 	private val center = Vector3f(0f, 0f, 0f)
-	private val position = Vector3f(0f, 25f, 10f)
+	private val speed = 0.5f
+
 	private var yaw = 0f
 	private var pitch = 0f
 
 	private val fovY = toRadians(fov / aspectRatio)
 	private val nearPlane = 0.5f
-	private val farPlane = 250f
+	private val farPlane = 150f
 
 	private var mouseSensitivity = 0.1
 	private var mousePosX = 0.0
@@ -32,8 +35,18 @@ class Camera(aspectRatio: Float, fov: Float) {
 
 	fun update() {
 		updateMousePosition()
-		updatePosition()
-		updateOrientation()
+
+		val direction = getMovementDirection(Vector3f())
+		if (direction.lengthSquared() > 0.1) {
+			viewMatrix.transpose().transformDirection(direction.normalize())
+			move(direction)
+		}
+
+		yaw += (-mouseDeltaX * mouseSensitivity).toFloat()
+		pitch += (-mouseDeltaY * mouseSensitivity).toFloat()
+		clampPitch()
+
+		updateView()
 	}
 
 	private fun updateMousePosition() {
@@ -45,33 +58,39 @@ class Camera(aspectRatio: Float, fov: Float) {
 		mousePosY = newMousePosY
 	}
 
-	private fun updatePosition() {
-		val movementDirection = Vector3f()
-		if (Window.getPressedKeys().contains(Keys.A))
-			movementDirection.add(LEFT)
-		if (Window.getPressedKeys().contains(Keys.D))
-			movementDirection.add(RIGHT)
-		if (Window.getPressedKeys().contains(Keys.W))
-			movementDirection.add(FORWARD)
-		if (Window.getPressedKeys().contains(Keys.S))
-			movementDirection.add(BACK)
-
-		if (movementDirection.lengthSquared() > 0.1) {
-			movementDirection.normalize().mul(0.2f)
-			viewMatrix.transpose().transformDirection(movementDirection)
-			position.add(movementDirection)
-		}
-	}
-
-	private fun updateOrientation() {
-		yaw += (-mouseDeltaX * mouseSensitivity).toFloat()
-		pitch += (-mouseDeltaY * mouseSensitivity).toFloat()
-		clampPitch()
-
+	private fun updateView() {
 		viewMatrix.identity()
 			.rotateX(toRadians(pitch))
 			.rotateY(toRadians(yaw))
 			.translate(-position.x, -position.y, -position.z)
+	}
+
+	private fun getMovementDirection(dest: Vector3f): Vector3f {
+		dest.zero()
+		if (Window.getPressedKeys().contains(Keys.A))
+			dest.add(LEFT)
+		if (Window.getPressedKeys().contains(Keys.D))
+			dest.add(RIGHT)
+		if (Window.getPressedKeys().contains(Keys.W))
+			dest.add(FORWARD)
+		if (Window.getPressedKeys().contains(Keys.S))
+			dest.add(BACK)
+
+		return dest
+	}
+
+	private fun move(direction: Vector3f) {
+		position.add(direction.mul(speed))
+
+		val halfBoundary = boundary / 2
+		if (position.x > halfBoundary)
+			position.x -= boundary
+		else if (position.x < -halfBoundary)
+			position.x += boundary
+		if (position.z > halfBoundary)
+			position.z -= boundary
+		else if (position.z < -halfBoundary)
+			position.z += boundary
 	}
 
 	/**

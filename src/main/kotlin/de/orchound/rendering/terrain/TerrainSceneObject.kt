@@ -10,6 +10,9 @@ import org.joml.Vector3f
 
 class TerrainSceneObject(val mesh: OpenGLMesh, val texture: OpenGLTexture) {
 
+	lateinit var camera: Camera
+	lateinit var shader: TerrainShader
+
 	private val lightDirection = Vector3f(-10f)
 	private val csLightDirection = Vector3f()
 
@@ -18,22 +21,23 @@ class TerrainSceneObject(val mesh: OpenGLMesh, val texture: OpenGLTexture) {
 	private val modelView = Matrix4f()
 	private val modelViewProjection = Matrix4f()
 
-	fun preparePerspective(camera: Camera) {
-		camera.getView(view)
-		modelView.set(view).mul(model)
-		camera.getProjectionView(modelViewProjection).mul(model)
-	}
-
 	fun update() {
+		camera.getView(view)
 		view.transformDirection(lightDirection, csLightDirection).normalize()
 	}
 
-	fun prepareShader(shader: TerrainShader) {
-		shader.setModelView(modelView)
-		shader.setModelViewProjection(modelViewProjection)
+	fun draw() {
 		shader.setCsLightDirection(csLightDirection)
 		shader.setTexture(texture.handle)
+		shader.setModelView(modelView)
+		shader.setModelViewProjection(modelViewProjection)
+
+		mesh.draw()
 	}
 
-	fun draw() = mesh.draw()
+	fun translate(offset: Vector3f) {
+		model.translation(offset)
+		modelView.set(view).mul(model)
+		camera.getProjectionView(modelViewProjection).mul(model)
+	}
 }

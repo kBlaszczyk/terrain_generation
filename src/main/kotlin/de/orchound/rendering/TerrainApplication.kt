@@ -5,10 +5,12 @@ import de.orchound.rendering.opengl.TerrainShader
 import de.orchound.rendering.terrain.TerrainGenerator
 import de.orchound.rendering.terrain.TerrainLayout
 import de.orchound.rendering.terrain.TerrainSceneObject
+import org.joml.Vector3f
 
 
 object TerrainApplication {
-	private val camera = Camera(Window.aspectRatio, 90f)
+	private val terrainWidth = 256
+	private val camera = Camera(Window.aspectRatio, 90f, terrainWidth.toFloat())
 	private val shader: TerrainShader
 	private val terrain: TerrainSceneObject
 
@@ -21,14 +23,16 @@ object TerrainApplication {
 			this.addLayer("water", 0.5f, Color.fromHex("3662D0"))
 			this.addLayer("sand", 0.6f, Color.fromHex("E9E19E"))
 			this.addLayer("grass low", 0.8f, Color.fromHex("73CB1D"))
-			this.addLayer("grass high", 1f, Color.fromHex("50881B"))
-			this.addLayer("rocks", 1.2f, Color.fromHex("BD7118"))
-			this.addLayer("mountain", 1.7f, Color.fromHex("6F6860"))
+			this.addLayer("grass high", 1.3f, Color.fromHex("50881B"))
+			this.addLayer("rocks", 1.5f, Color.fromHex("BD7118"))
+			this.addLayer("mountain", 1.8f, Color.fromHex("6F6860"))
 			this.addLayer("mountain high", 1.9f, Color.fromHex("2E3436"))
 			this.addLayer("snow", 2f, Color.fromHex("F0EBE2"))
 		}
-		val generator = TerrainGenerator(256, terrainLayout, 20f)
+		val generator = TerrainGenerator(terrainWidth, terrainLayout, 8f)
 		terrain = generator.generateTerrain()
+		terrain.camera = camera
+		terrain.shader = shader
 	}
 
 	fun run() {
@@ -41,18 +45,24 @@ object TerrainApplication {
 
 	private fun update() {
 		camera.update()
-		terrain.preparePerspective(camera)
 		terrain.update()
 	}
 
 	private fun render() {
 		Window.prepareFrame()
-
 		shader.bind()
-		terrain.prepareShader(shader)
-		terrain.draw()
-		shader.unbind()
 
+		for (i in -1 .. 1) {
+			for (j in -1 .. 1) {
+				val offset = Vector3f(
+					(i * (terrainWidth - 1)).toFloat(), 0f, (j * (terrainWidth - 1)).toFloat()
+				)
+				terrain.translate(offset)
+				terrain.draw()
+			}
+		}
+
+		shader.unbind()
 		Window.finishFrame()
 	}
 }

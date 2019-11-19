@@ -11,8 +11,8 @@ import java.util.*
 
 object Window {
 
-	val width = 800
-	val height = 800
+	val width = 1280
+	val height = 720
 	val aspectRatio = width.toFloat() / height
 
 	var mousePosX = 0.0
