@@ -13,7 +13,7 @@ import org.joml.Vector3f
 
 object TerrainApplication {
 	private val terrainWidth = 256
-	private val camera = Camera(Window.aspectRatio, 90f, terrainWidth.toFloat())
+	private val camera = Camera(Window.aspectRatio, 90f, (terrainWidth - 1).toFloat())
 	private val shader: TerrainShader
 	private val terrains: Collection<TerrainSceneObject>
 	private val terrainTexture: OpenGLTexture
