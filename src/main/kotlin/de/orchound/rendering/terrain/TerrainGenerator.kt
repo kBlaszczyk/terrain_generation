@@ -15,7 +15,7 @@ import java.nio.IntBuffer
 class TerrainGenerator(val width: Int, val heightFactor: Float) {
 
 	fun generateTerrain(): Pair<OpenGLMesh, OpenGLTexture> {
-		val noiseMap = NoiseGenerator.generateNoiseMap(width, 6f)
+		val noiseMap = NoiseGenerator.generateNoiseMap(width, 4f)
 		val heightMap = HeightMap(noiseMap.width, noiseMap.data)
 
 		return Pair(createMesh(heightMap), createTexture(heightMap))

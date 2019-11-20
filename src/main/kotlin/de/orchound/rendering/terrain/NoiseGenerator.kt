@@ -5,24 +5,46 @@ import java.nio.FloatBuffer
 
 
 object NoiseGenerator {
-	fun generateNoiseMap(width: Int, scale: Float = 1f): NoiseMap {
-		require(scale > 0f)
+	fun generateNoiseMap(width: Int, frequency: Float = 1f): NoiseMap {
+		require(frequency > 0f)
 
 		val data = FloatArray(width * width)
 		val dataBuffer = FloatBuffer.wrap(data)
 
 		for (y in 0 until width) {
 			for (x in 0 until width) {
-				val sampleX = scale * x / (width - 1)
-				val sampleY = scale * y / (width - 1)
-
-				val perlinValue = STBPerlin.stb_perlin_fbm_noise3(
-					sampleX, sampleY, 0f, 4f, 0.3f, 6
-				)
-				dataBuffer.put(perlinValue)
+				val sampleX = x.toFloat() / (width - 1)
+				val sampleY = y.toFloat() / (width - 1)
+				val noiseValue = wrappedPerlinNoise(sampleX, sampleY, frequency)
+				dataBuffer.put(noiseValue)
 			}
 		}
 
 		return NoiseMap(width, data)
+	}
+
+	private fun wrappedPerlinNoise(x: Float, y: Float, frequency: Float): Float {
+		val lacunarity = 2f
+		val persistence = 0.5f
+
+		var sampleFrequency = frequency
+		var amplitude = 1f
+
+		var noiseValue = 0f
+		for (i in 0 .. 5) {
+			val sampleX = sampleFrequency * x
+			val sampleY = sampleFrequency * y
+			val wrapValue = sampleFrequency.toInt()
+
+			val perlinValue = STBPerlin.stb_perlin_noise3(
+				sampleX, sampleY, 0f, wrapValue, wrapValue, 0
+			)
+			noiseValue += perlinValue * amplitude
+
+			sampleFrequency *= lacunarity
+			amplitude *= persistence
+		}
+
+		return noiseValue
 	}
 }
