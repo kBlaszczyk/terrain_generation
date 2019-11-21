@@ -14,6 +14,7 @@ class TerrainShader {
 	private val csLightDirectionLocation: Int
 	private val layerColorLocations: IntArray
 	private val layerLimitLocations: IntArray
+	private val layerBlendingHeightLocations: IntArray
 	private val textureLocation: Int
 
 	private val matrixBuffer = FloatArray(16)
@@ -33,6 +34,9 @@ class TerrainShader {
 		}.toIntArray()
 		layerLimitLocations = (0 until MAX_LAYERS).map {
 			getUniformLocation("layer_limits[$it]")
+		}.toIntArray()
+		layerBlendingHeightLocations = (0 until MAX_LAYERS).map {
+			getUniformLocation("layer_blending_heights[$it]")
 		}.toIntArray()
 
 		textureLocation = glGetUniformLocation(handle, "texture_sampler")
@@ -59,6 +63,11 @@ class TerrainShader {
 	fun setLayerLimits(limits: FloatArray) {
 		for (index in limits.indices)
 			setUniformFloat(layerLimitLocations[index], limits[index])
+	}
+
+	fun setLayerBlendingHeights(blendingHeights: FloatArray) {
+		for (index in blendingHeights.indices)
+			setUniformFloat(layerBlendingHeightLocations[index], blendingHeights[index])
 	}
 
 	fun setTexture(textureHandle: Int) {

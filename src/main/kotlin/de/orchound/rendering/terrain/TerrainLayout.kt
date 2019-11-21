@@ -6,12 +6,12 @@ import org.joml.Vector3f
 
 class TerrainLayout {
 
-	private data class TerrainLayer(val name: String, val upperLimit: Float, val color: Color)
+	private data class TerrainLayer(val name: String, val color: Color, val upperLimit: Float, val blendingHeight: Float)
 
 	private val layers: MutableCollection<TerrainLayer> = ArrayList()
 
-	fun addLayer(name: String, upperLimit: Float, color: Color) {
-		layers.add(TerrainLayer(name, upperLimit, color))
+	fun addLayer(name: String, color: Color, upperLimit: Float, blendingHeight: Float) {
+		layers.add(TerrainLayer(name, color, upperLimit, blendingHeight))
 	}
 
 	fun getColor(heightValue: Float): Color {
@@ -32,6 +32,13 @@ class TerrainLayout {
 		val offset = 10 - layers.size
 		layers.withIndex().forEach {
 			dest[it.index + offset] = it.value.upperLimit
+		}
+	}
+
+	fun getBlendingHeights(dest: FloatArray) {
+		val offset = 10 - layers.size
+		layers.withIndex().forEach {
+			dest[it.index + offset] = it.value.blendingHeight
 		}
 	}
 }

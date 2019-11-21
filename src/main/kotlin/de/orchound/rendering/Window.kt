@@ -105,7 +105,7 @@ object Window {
 	}
 
 	private fun initRendering() {
-		glClearColor(0f, 0f, 0f, 1f)
+		glClearColor(0.71f, 0.86f, 0.94f, 1f)
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 		glEnable(GL_DEPTH_TEST)
 		glEnable(GL_CULL_FACE)

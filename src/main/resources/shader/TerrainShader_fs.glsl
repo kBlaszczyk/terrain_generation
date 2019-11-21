@@ -1,6 +1,7 @@
 #version 330
 
 const int MAX_LAYERS = 10;
+const float EPSILON = 0.0001;
 
 in vec3 position_cs;
 in vec3 normal_cs;
@@ -14,6 +15,7 @@ uniform sampler2D texture_sampler;
 
 uniform vec3 layer_colors[MAX_LAYERS];
 uniform float layer_limits[MAX_LAYERS];
+uniform float layer_blending_heights[MAX_LAYERS];
 
 float ambient_intensity = 0.2;
 float diffuse_intensity = 0.8;
@@ -24,7 +26,8 @@ void main(void) {
 
 	vec4 material_color = vec4(layer_colors[MAX_LAYERS - 1], 1);
 	for (int i = MAX_LAYERS - 1; i >= 0; i--) {
-		float draw_strength = clamp(sign(layer_limits[i] - height), 0, 1);
+		float blending_range = layer_limits[i] - layer_blending_heights[i] + EPSILON;
+		float draw_strength = clamp((layer_limits[i] - height) / blending_range, 0, 1);
 		material_color = material_color * (1 - draw_strength) + vec4(layer_colors[i], 1) * draw_strength;
 	}
 
