@@ -2,8 +2,9 @@ package de.orchound.rendering
 
 import de.orchound.rendering.display.Keys
 import de.orchound.rendering.opengl.OpenGLMesh
-import de.orchound.rendering.opengl.OpenGLTexture
+import de.orchound.rendering.opengl.OpenGLTextureArray
 import de.orchound.rendering.opengl.TerrainShader
+import de.orchound.rendering.opengl.TextureLoader
 import de.orchound.rendering.terrain.TerrainGenerator
 import de.orchound.rendering.terrain.TerrainLayout
 import de.orchound.rendering.terrain.TerrainSceneObject
@@ -16,29 +17,35 @@ object TerrainApplication {
 	private val camera = Camera(Window.aspectRatio, 90f, (terrainWidth - 1).toFloat())
 	private val shader: TerrainShader
 	private val terrains: Collection<TerrainSceneObject>
-	private val terrainTexture: OpenGLTexture
 
 	private val lightDirection = Vector3f(-10f)
 	private val csLightDirection = Vector3f()
 	private val layerColors = Array(10) { Vector3f() }
 	private val layerLimits = FloatArray(10)
 	private val layerBlendingHeights = FloatArray(10)
+	private val terrainLayout = TerrainLayout()
+	private val textureArray: OpenGLTextureArray
 
 	init {
 		Window.initialize()
 		shader = TerrainShader()
+		textureArray = TextureLoader.loadTextureArray(
+			"/textures/water.png",
+			"/textures/sandy_grass.png",
+			"/textures/grass.png",
+			"/textures/stoney_ground.png",
+			"/textures/rocks_2.png",
+			"/textures/rocks_1.png",
+			"/textures/snow.png"
+		)
 
-		val terrainLayout = TerrainLayout().apply {
-			this.addLayer("water deep", Color.fromHex("1824A9"), 5f, 4f)
-			this.addLayer("water", Color.fromHex("3662D0"), 9f, 8f)
-			this.addLayer("sand", Color.fromHex("E9E19E"), 11f, 10f)
-			this.addLayer("grass low", Color.fromHex("73CB1D"), 13f, 12f)
-			this.addLayer("grass high", Color.fromHex("50881B"), 15f, 14f)
-			this.addLayer("rocks", Color.fromHex("BD7118"), 17f, 16f)
-			this.addLayer("mountain", Color.fromHex("6F6860"), 19f, 18f)
-			this.addLayer("mountain high", Color.fromHex("5F5D5B"), 24f, 23f)
-			this.addLayer("snow", Color.fromHex("F0EBE2"), 25f, 24f)
-		}
+		terrainLayout.addLayer("water", Color.fromHex("3662D0"), 9f, 8f)
+		terrainLayout.addLayer("sand", Color.fromHex("E9E19E"), 11f, 10f)
+		terrainLayout.addLayer("grass", Color.fromHex("50881B"), 15f, 14f)
+		terrainLayout.addLayer("stoney ground", Color.fromHex("BD7118"), 17f, 16f)
+		terrainLayout.addLayer("rocks low", Color.fromHex("6F6860"), 19f, 18f)
+		terrainLayout.addLayer("rocks high", Color.fromHex("5F5D5B"), 24f, 23f)
+		terrainLayout.addLayer("snow", Color.fromHex("F0EBE2"), 25f, 24f)
 
 		terrainLayout.getColors(layerColors)
 		terrainLayout.getLimits(layerLimits)
@@ -47,7 +54,6 @@ object TerrainApplication {
 		val generator = TerrainGenerator(terrainWidth, 16f)
 		val meshTexturePair = generator.generateTerrain()
 		terrains = getTerrainsFromModel(meshTexturePair.first)
-		terrainTexture = meshTexturePair.second
 	}
 
 	fun run() {
@@ -69,7 +75,8 @@ object TerrainApplication {
 		shader.bind()
 
 		shader.setCsLightDirection(csLightDirection)
-		shader.setTexture(terrainTexture.handle)
+		shader.setLayersCount(terrainLayout.layersCount)
+		shader.setTextureArray(textureArray.handle)
 		shader.setLayerColors(layerColors)
 		shader.setLayerLimits(layerLimits)
 		shader.setLayerBlendingHeights(layerBlendingHeights)

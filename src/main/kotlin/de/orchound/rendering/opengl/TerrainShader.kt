@@ -12,6 +12,7 @@ class TerrainShader {
 	private val modelViewLocation: Int
 	private val modelViewProjectionLocation: Int
 	private val csLightDirectionLocation: Int
+	private val layersCountLocation: Int
 	private val layerColorLocations: IntArray
 	private val layerLimitLocations: IntArray
 	private val layerBlendingHeightLocations: IntArray
@@ -29,6 +30,7 @@ class TerrainShader {
 		modelViewLocation = getUniformLocation("model_view")
 		modelViewProjectionLocation = getUniformLocation("model_view_projection")
 		csLightDirectionLocation = getUniformLocation("light_direction_cs")
+		layersCountLocation = getUniformLocation("layers_count")
 		layerColorLocations = (0 until MAX_LAYERS).map {
 			getUniformLocation("layer_colors[$it]")
 		}.toIntArray()
@@ -53,6 +55,7 @@ class TerrainShader {
 	fun setModelView(matrix: Matrix4f) = setUniformMatrix(modelViewLocation, matrix)
 	fun setModelViewProjection(matrix: Matrix4f) = setUniformMatrix(modelViewProjectionLocation, matrix)
 	fun setCsLightDirection(vector: Vector3f) = setUniformVector(csLightDirectionLocation, vector)
+	fun setLayersCount(value: Int) = glUniform1i(layersCountLocation, value)
 
 	fun setLayerColors(colors: Array<Vector3f>) {
 		for (index in colors.indices) {
@@ -70,9 +73,9 @@ class TerrainShader {
 			setUniformFloat(layerBlendingHeightLocations[index], blendingHeights[index])
 	}
 
-	fun setTexture(textureHandle: Int) {
+	fun setTextureArray(textureArrayHandle: Int) {
 		glActiveTexture(GL_TEXTURE0)
-		glBindTexture(GL_TEXTURE_2D, textureHandle)
+		glBindTexture(GL_TEXTURE_2D, textureArrayHandle)
 	}
 
 	private fun getUniformLocation(name: String) = glGetUniformLocation(handle, name)
