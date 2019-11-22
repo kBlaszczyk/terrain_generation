@@ -45,7 +45,7 @@ class TerrainGenerator(val width: Int, val heightFactor: Float) {
 
 		val vertexData = createVertices(heightMap)
 		val indices = createIndices(heightMap.width)
-		val normalData = createNormals(vertexData, indices)
+		val normalData = createNormals(vertexData, indices, heightMap.width)
 
 		mesh.setVertexAttribute(
 			vertexData.toByteBuffer(true), 0, OpenGLType.FLOAT,
@@ -82,7 +82,7 @@ class TerrainGenerator(val width: Int, val heightFactor: Float) {
 		return vertexData
 	}
 
-	private fun createNormals(vertexData: FloatArray, indices: IntArray): FloatArray {
+	private fun createNormals(vertexData: FloatArray, indices: IntArray, vertexWidth: Int): FloatArray {
 		val normalData = FloatArray(vertexData.size)
 
 		for (triangle in indices.indices step 3) {
@@ -101,8 +101,28 @@ class TerrainGenerator(val width: Int, val heightFactor: Float) {
 				addNormalToVertex(normal, normalData, vertex.first)
 		}
 
+		for (i in 0 until vertexWidth) {
+			combineNormals(i, vertexWidth * (vertexWidth - 1) + i, normalData)
+			combineNormals(i * vertexWidth, i * vertexWidth + (vertexWidth - 1), normalData)
+		}
+
 		normalData.vec3Normalization()
 		return normalData
+	}
+
+	private fun combineNormals(vertexIndex1: Int, vertexIndex2: Int, normalData: FloatArray) {
+		val normalIndex1 = vertexIndex1 * 3
+		val normalIndex2 = vertexIndex2 * 3
+		val normal = Vector3f(
+			normalData[normalIndex1], normalData[normalIndex1 + 1], normalData[normalIndex1 + 2]
+		).add(
+			normalData[normalIndex2], normalData[normalIndex2 + 1], normalData[normalIndex2 + 2]
+		)
+
+		for (i in 0 .. 2) {
+			normalData[normalIndex1 + i] = normal[i]
+			normalData[normalIndex2 + i] = normal[i]
+		}
 	}
 
 	private fun addNormalToVertex(normal: Vector3f, normalData: FloatArray, vertexIndex: Int) {
