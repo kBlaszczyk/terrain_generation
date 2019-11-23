@@ -21,7 +21,7 @@ float ambient_intensity = 0.2;
 float diffuse_intensity = 0.8;
 float specular_intensity = 0.5;
 float specular_power = 2;
-float texture_scale = 0.1;
+float texture_scale = 0.05;
 
 vec4 sampleTextureTriplanar(vec3 blend_axes, int index) {
 	vec4 x_projection_color = texture(layer_textures, vec3(vs_out_position_ms.yz * texture_scale, index)) * blend_axes.x;

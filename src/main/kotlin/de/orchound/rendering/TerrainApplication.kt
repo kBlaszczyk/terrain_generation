@@ -13,8 +13,8 @@ import org.joml.Vector3f
 
 
 object TerrainApplication {
-	private val terrainWidth = 256
-	private val camera = Camera(Window.aspectRatio, 90f, (terrainWidth - 1).toFloat())
+	private val terrainWidth = 512f
+	private val camera = Camera(Window.aspectRatio, 90f, terrainWidth)
 	private val shader: TerrainShader
 	private val terrains: Collection<TerrainSceneObject>
 
@@ -41,19 +41,19 @@ object TerrainApplication {
 
 		terrainLayout.addLayer("water", Color.fromHex("3662D0"), 9f, 8f)
 		terrainLayout.addLayer("sand", Color.fromHex("E9E19E"), 11f, 10f)
-		terrainLayout.addLayer("grass", Color.fromHex("50881B"), 15f, 14f)
-		terrainLayout.addLayer("stoney ground", Color.fromHex("BD7118"), 17f, 16f)
-		terrainLayout.addLayer("rocks low", Color.fromHex("6F6860"), 19f, 18f)
-		terrainLayout.addLayer("rocks high", Color.fromHex("5F5D5B"), 24f, 23f)
-		terrainLayout.addLayer("snow", Color.fromHex("F0EBE2"), 25f, 24f)
+		terrainLayout.addLayer("grass", Color.fromHex("50881B"), 20f, 18f)
+		terrainLayout.addLayer("stoney ground", Color.fromHex("BD7118"), 22f, 20f)
+		terrainLayout.addLayer("rocks low", Color.fromHex("6F6860"), 24f, 23f)
+		terrainLayout.addLayer("rocks high", Color.fromHex("5F5D5B"), 33f, 31f)
+		terrainLayout.addLayer("snow", Color.fromHex("F0EBE2"), 40f, 35f)
 
 		terrainLayout.getColors(layerColors)
 		terrainLayout.getLimits(layerLimits)
 		terrainLayout.getBlendingHeights(layerBlendingHeights)
 
-		val generator = TerrainGenerator(terrainWidth, 16f)
-		val meshTexturePair = generator.generateTerrain()
-		terrains = getTerrainsFromModel(meshTexturePair.first)
+		val generator = TerrainGenerator(terrainWidth, 128, 25f)
+		val terrainMesh = generator.generateTerrain()
+		terrains = getTerrainsFromModel(terrainMesh)
 	}
 
 	fun run() {
@@ -92,9 +92,7 @@ object TerrainApplication {
 		for (i in -1 .. 1) {
 			for (j in -1 .. 1) {
 				val terrain = TerrainSceneObject(mesh, camera, shader)
-				val offset = Vector3f(
-					(i * (terrainWidth - 1)).toFloat(), 0f, (j * (terrainWidth - 1)).toFloat()
-				)
+				val offset = Vector3f(i * terrainWidth, 0f, j * terrainWidth)
 				terrain.translation(offset)
 				terrains.add(terrain)
 			}
