@@ -16,19 +16,19 @@ class TerrainGenerator(private val width: Float, private val resolution: Int, pr
 
 	fun generateTerrain(): OpenGLMesh {
 		val noiseMap = NoiseGenerator.generateNoiseMap(resolution + 1, 4f)
-		val heightMap = HeightMap(noiseMap.width, noiseMap.data)
+		val heightMap = Heightmap(noiseMap.width, noiseMap.data, heightFactor)
 
 		return createMesh(heightMap, width)
 	}
 
-	private fun createTexture(heightMap: HeightMap): OpenGLTexture {
+	private fun createTexture(heightMap: Heightmap): OpenGLTexture {
 		val data = ByteBuffer.allocateDirect(heightMap.width * heightMap.width * 3)
 		//heightMapToColors(heightMap, data)
 		heightMapToGreyscale(heightMap, data)
 		return OpenGLTexture(heightMap.width, heightMap.width, data)
 	}
 
-	private fun heightMapToGreyscale(heightMap: HeightMap, dest: ByteBuffer) {
+	private fun heightMapToGreyscale(heightMap: Heightmap, dest: ByteBuffer) {
 		for (y in 0 until heightMap.width) {
 			for (x in 0 until heightMap.width) {
 				val normalizedHeight = heightMap.getValue(x, y) / heightMap.maxHeight
@@ -40,7 +40,7 @@ class TerrainGenerator(private val width: Float, private val resolution: Int, pr
 		dest.flip()
 	}
 
-	private fun createMesh(heightMap: HeightMap, width: Float): OpenGLMesh {
+	private fun createMesh(heightMap: Heightmap, width: Float): OpenGLMesh {
 		val mesh = OpenGLMesh()
 
 		val vertexData = createVertices(heightMap, width)
@@ -67,7 +67,7 @@ class TerrainGenerator(private val width: Float, private val resolution: Int, pr
 		return mesh
 	}
 
-	private fun createVertices(heightMap: HeightMap, width: Float): FloatArray {
+	private fun createVertices(heightMap: Heightmap, width: Float): FloatArray {
 		val vertexData = FloatArray(heightMap.width * heightMap.width * 3)
 		val vertexBuffer = FloatBuffer.wrap(vertexData)
 

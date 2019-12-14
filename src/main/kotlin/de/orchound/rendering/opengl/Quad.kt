@@ -1,15 +1,15 @@
 package de.orchound.rendering.opengl
 
-import org.lwjgl.opengl.GL20.*
 import org.lwjgl.opengl.GL30.glBindVertexArray
 import org.lwjgl.opengl.GL30.glGenVertexArrays
+import org.lwjgl.opengl.GL40.*
 
 
-class Quad {
+object Quad {
 	private val vao = glGenVertexArrays()
 
 	init {
-		val vertices = floatArrayOf(0f, 0f, 0f, 1f, 1f, 0f, 1f, 1f)
+		val vertices = floatArrayOf(-0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f)
 
 		val vbo = glGenBuffers()
 		glBindBuffer(GL_ARRAY_BUFFER, vbo)
@@ -24,8 +24,9 @@ class Quad {
 	}
 
 	fun draw() {
+		glPatchParameteri(GL_PATCH_VERTICES, 4)
 		glBindVertexArray(vao)
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4)
+		glDrawArrays(GL_PATCHES, 0, 4)
 		glBindVertexArray(0)
 	}
 }

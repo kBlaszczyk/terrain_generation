@@ -1,5 +1,8 @@
 package de.orchound.rendering.terrain
 
+import org.lwjgl.opengl.GL11.*
+import org.lwjgl.opengl.GL30.GL_R32F
+
 
 abstract class DataMap(val width: Int, val height: Int, val data: FloatArray) {
 
@@ -14,12 +17,14 @@ abstract class DataMap(val width: Int, val height: Int, val data: FloatArray) {
 
 class NoiseMap(width: Int, data: FloatArray) : DataMap(width, width, data)
 
-class HeightMap(width: Int, data: FloatArray) : DataMap(width, width, data) {
+class Heightmap(width: Int, noise: FloatArray, heightFactor: Float) : DataMap(width, width, noise) {
 	val maxHeight: Float
+	val handle = glGenTextures()
 
 	init {
 		var min = data[0]
 		for (i in data.indices) {
+			data[i] *= heightFactor
 			if (data[i] < min)
 				min = data[i]
 		}
@@ -32,5 +37,10 @@ class HeightMap(width: Int, data: FloatArray) : DataMap(width, width, data) {
 		}
 
 		maxHeight = max
+
+		glBindTexture(GL_TEXTURE_2D, handle)
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, width, 0, GL_RED, GL_FLOAT, data)
 	}
 }

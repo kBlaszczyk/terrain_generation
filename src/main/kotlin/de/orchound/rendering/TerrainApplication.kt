@@ -1,13 +1,8 @@
 package de.orchound.rendering
 
 import de.orchound.rendering.display.Keys
-import de.orchound.rendering.opengl.OpenGLMesh
-import de.orchound.rendering.opengl.OpenGLTextureArray
-import de.orchound.rendering.opengl.TerrainShader
-import de.orchound.rendering.opengl.TextureLoader
-import de.orchound.rendering.terrain.TerrainGenerator
-import de.orchound.rendering.terrain.TerrainLayout
-import de.orchound.rendering.terrain.TerrainSceneObject
+import de.orchound.rendering.opengl.*
+import de.orchound.rendering.terrain.*
 import org.joml.Matrix4f
 import org.joml.Vector3f
 
@@ -25,6 +20,7 @@ object TerrainApplication {
 	private val layerBlendingHeights = FloatArray(10)
 	private val terrainLayout = TerrainLayout()
 	private val textureArray: OpenGLTextureArray
+	private val heightmap: Heightmap
 
 	init {
 		Window.initialize()
@@ -51,9 +47,9 @@ object TerrainApplication {
 		terrainLayout.getLimits(layerLimits)
 		terrainLayout.getBlendingHeights(layerBlendingHeights)
 
-		val generator = TerrainGenerator(terrainWidth, 128, 25f)
-		val terrainMesh = generator.generateTerrain()
-		terrains = getTerrainsFromModel(terrainMesh)
+		val noiseMap = NoiseGenerator.generateNoiseMap(terrainWidth.toInt(), 4f)
+		heightmap = Heightmap(noiseMap.width, noiseMap.data, 25f)
+		terrains = getTerrains()
 	}
 
 	fun run() {
@@ -77,6 +73,7 @@ object TerrainApplication {
 		shader.setCsLightDirection(csLightDirection)
 		shader.setLayersCount(terrainLayout.layersCount)
 		shader.setTextureArray(textureArray.handle)
+		shader.setHeightmap(heightmap.handle)
 		shader.setLayerColors(layerColors)
 		shader.setLayerLimits(layerLimits)
 		shader.setLayerBlendingHeights(layerBlendingHeights)
@@ -87,13 +84,12 @@ object TerrainApplication {
 		Window.finishFrame()
 	}
 
-	private fun getTerrainsFromModel(mesh: OpenGLMesh): Collection<TerrainSceneObject> {
+	private fun getTerrains(): Collection<TerrainSceneObject> {
 		val terrains = ArrayList<TerrainSceneObject>(9)
 		for (i in -1 .. 1) {
 			for (j in -1 .. 1) {
-				val terrain = TerrainSceneObject(mesh, camera, shader)
-				val offset = Vector3f(i * terrainWidth, 0f, j * terrainWidth)
-				terrain.translation(offset)
+				val terrain = TerrainSceneObject(terrainWidth, camera, shader)
+				terrain.translate(Vector3f(i.toFloat(), 0f, j.toFloat()))
 				terrains.add(terrain)
 			}
 		}

@@ -5,9 +5,8 @@ const float EPSILON = 0.0001;
 
 in vec3 position_cs;
 in vec3 normal_cs;
-in vec2 uv;
-in vec3 vs_out_position_ms;
-in vec3 vs_out_normal_ms;
+in vec3 tes_out_position_ws;
+in vec3 tes_out_normal_ms;
 
 out vec4 color;
 
@@ -24,9 +23,9 @@ float specular_power = 2;
 float texture_scale = 0.05;
 
 vec4 sampleTextureTriplanar(vec3 blend_axes, int index) {
-	vec4 x_projection_color = texture(layer_textures, vec3(vs_out_position_ms.yz * texture_scale, index)) * blend_axes.x;
-	vec4 y_projection_color = texture(layer_textures, vec3(vs_out_position_ms.xz * texture_scale, index)) * blend_axes.y;
-	vec4 z_projection_color = texture(layer_textures, vec3(vs_out_position_ms.xy * texture_scale, index)) * blend_axes.z;
+	vec4 x_projection_color = texture(layer_textures, vec3(tes_out_position_ws.yz * texture_scale, index)) * blend_axes.x;
+	vec4 y_projection_color = texture(layer_textures, vec3(tes_out_position_ws.xz * texture_scale, index)) * blend_axes.y;
+	vec4 z_projection_color = texture(layer_textures, vec3(tes_out_position_ws.xy * texture_scale, index)) * blend_axes.z;
 
 	return x_projection_color + y_projection_color + z_projection_color;
 }
@@ -46,13 +45,13 @@ vec4 applyLighting(vec4 color) {
 
 void main(void) {
 
-	vec3 blend_axes = abs(vs_out_normal_ms);
+	vec3 blend_axes = abs(tes_out_normal_ms);
 	blend_axes /= (blend_axes.x + blend_axes.y + blend_axes.z);
 
 	vec4 material_color = vec4(0);
 	for (int i = layers_count - 1; i >= 0; i--) {
 		float blending_range = layer_limits[i] - layer_blending_heights[i] + EPSILON;
-		float draw_strength = clamp((layer_limits[i] - vs_out_position_ms.y) / blending_range, 0, 1);
+		float draw_strength = clamp((layer_limits[i] - tes_out_position_ws.y) / blending_range, 0, 1);
 
 		vec4 texture_color = sampleTextureTriplanar(blend_axes, i);
 		material_color = material_color * (1 - draw_strength) + texture_color * draw_strength;

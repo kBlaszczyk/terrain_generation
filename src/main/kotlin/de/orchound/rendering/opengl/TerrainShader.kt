@@ -2,13 +2,14 @@ package de.orchound.rendering.opengl
 
 import org.joml.Matrix4f
 import org.joml.Vector3f
-import org.lwjgl.opengl.GL20.*
+import org.lwjgl.opengl.GL40.*
 
 
 class TerrainShader {
 
 	private val handle: Int
 
+	private val modelLocation: Int
 	private val modelViewLocation: Int
 	private val modelViewProjectionLocation: Int
 	private val csLightDirectionLocation: Int
@@ -16,17 +17,26 @@ class TerrainShader {
 	private val layerColorLocations: IntArray
 	private val layerLimitLocations: IntArray
 	private val layerBlendingHeightLocations: IntArray
-	private val textureLocation: Int
+	private val layerTexturesLocation: Int
+	private val heightmapLocation: Int
 
 	private val matrixBuffer = FloatArray(16)
 	private val vectorBuffer = FloatArray(3)
+	private val innerTessellationLevelBuffer = FloatArray(4)
+	private val outerTessellationLevelBuffer = FloatArray(2)
 
 	init {
 		val vertexShaderSource = loadShaderSource("/shader/TerrainShader_vs.glsl")
 		val fragmentShaderSource = loadShaderSource("/shader/TerrainShader_fs.glsl")
+		val tessellationControlShaderSource = loadShaderSource("/shader/TerrainShader_tcs.glsl")
+		val tessellationEvaluationShaderSource = loadShaderSource("/shader/TerrainShader_tes.glsl")
 
-		handle = createShaderProgram(vertexShaderSource, fragmentShaderSource)
+		handle = createShaderProgram(
+			vertexShaderSource, fragmentShaderSource,
+			tessellationControlShaderSource, tessellationEvaluationShaderSource
+		)
 
+		modelLocation = getUniformLocation("model")
 		modelViewLocation = getUniformLocation("model_view")
 		modelViewProjectionLocation = getUniformLocation("model_view_projection")
 		csLightDirectionLocation = getUniformLocation("light_direction_cs")
@@ -41,8 +51,13 @@ class TerrainShader {
 			getUniformLocation("layer_blending_heights[$it]")
 		}.toIntArray()
 
-		textureLocation = glGetUniformLocation(handle, "texture_sampler")
-		glUniform1i(textureLocation, 0)
+		layerTexturesLocation = glGetUniformLocation(handle, "layer_textures")
+		heightmapLocation = glGetUniformLocation(handle, "heightmap")
+
+		bind()
+		glUniform1i(layerTexturesLocation, 0)
+		glUniform1i(heightmapLocation, 1)
+		unbind()
 	}
 
 	fun bind() = glUseProgram(handle)
@@ -52,6 +67,7 @@ class TerrainShader {
 	 * Sets the Uniform variable for the Model matrix.
 	 * This method needs to be called after the shader has been bound.
 	 */
+	fun setModel(matrix: Matrix4f) = setUniformMatrix(modelLocation, matrix)
 	fun setModelView(matrix: Matrix4f) = setUniformMatrix(modelViewLocation, matrix)
 	fun setModelViewProjection(matrix: Matrix4f) = setUniformMatrix(modelViewProjectionLocation, matrix)
 	fun setCsLightDirection(vector: Vector3f) = setUniformVector(csLightDirectionLocation, vector)
@@ -78,6 +94,18 @@ class TerrainShader {
 		glBindTexture(GL_TEXTURE_2D, textureArrayHandle)
 	}
 
+	fun setHeightmap(heightmapHandle: Int) {
+		glActiveTexture(GL_TEXTURE1)
+		glBindTexture(GL_TEXTURE_2D, heightmapHandle)
+	}
+
+	fun setTessellationLevels(inner: Float, outer: Float) {
+		innerTessellationLevelBuffer.fill(inner)
+		glPatchParameterfv(GL_PATCH_DEFAULT_INNER_LEVEL, innerTessellationLevelBuffer)
+		outerTessellationLevelBuffer.fill(outer)
+		glPatchParameterfv(GL_PATCH_DEFAULT_OUTER_LEVEL, outerTessellationLevelBuffer)
+	}
+
 	private fun getUniformLocation(name: String) = glGetUniformLocation(handle, name)
 
 	private fun setUniformMatrix(location: Int, matrix: Matrix4f) {
@@ -101,23 +129,32 @@ class TerrainShader {
 			glUniform1f(location, value)
 	}
 
-	private fun createShaderProgram(vertexShaderSource: Array<String>, fragmentShaderSource: Array<String>): Int {
+	private fun createShaderProgram(
+		vertexShaderSource: Array<String>, fragmentShaderSource: Array<String>,
+		tessellationControlShaderSource: Array<String>, tessellationEvaluationShaderSource: Array<String>
+	): Int {
 		val vertexShaderHandle = compileShader(vertexShaderSource, GL_VERTEX_SHADER)
+		val tessellationControlShaderHandle = compileShader(tessellationControlShaderSource, GL_TESS_CONTROL_SHADER)
+		val tessellationEvaluationShaderHandle = compileShader(tessellationEvaluationShaderSource, GL_TESS_EVALUATION_SHADER)
 		val fragmentShaderHandle = compileShader(fragmentShaderSource, GL_FRAGMENT_SHADER)
 
 		val programHandle = glCreateProgram()
 		glAttachShader(programHandle, vertexShaderHandle)
+		glAttachShader(programHandle, tessellationControlShaderHandle)
+		glAttachShader(programHandle, tessellationEvaluationShaderHandle)
 		glAttachShader(programHandle, fragmentShaderHandle)
 
-		glBindAttribLocation(programHandle, 0, "position_ms")
-		glBindAttribLocation(programHandle, 1, "normal_ms")
-		glBindAttribLocation(programHandle, 2, "texcoords")
+		glBindAttribLocation(programHandle, 0, "in_position")
 
 		glLinkProgram(programHandle)
 
 		glDetachShader(programHandle, vertexShaderHandle)
+		glDetachShader(programHandle, tessellationControlShaderHandle)
+		glDetachShader(programHandle, tessellationEvaluationShaderHandle)
 		glDetachShader(programHandle, fragmentShaderHandle)
 		glDeleteShader(vertexShaderHandle)
+		glDeleteShader(tessellationControlShaderHandle)
+		glDeleteShader(tessellationEvaluationShaderHandle)
 		glDeleteShader(fragmentShaderHandle)
 
 		validateShaderLinking(programHandle)
