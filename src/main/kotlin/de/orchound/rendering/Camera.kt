@@ -11,7 +11,7 @@ class Camera(aspectRatio: Float, fov: Float, private val boundary: Float) {
 
 	private val up = UP
 	private val center = Vector3f(0f, 0f, 0f)
-	private val speed = 0.5f
+	private val speed = 100f
 
 	private var yaw = 0f
 	private var pitch = 0f
@@ -80,7 +80,7 @@ class Camera(aspectRatio: Float, fov: Float, private val boundary: Float) {
 	}
 
 	private fun move(direction: Vector3f) {
-		position.add(direction.mul(speed))
+		position.add(direction.mul(speed * Time.deltaTime))
 
 		val halfBoundary = boundary / 2
 		if (position.x > halfBoundary)

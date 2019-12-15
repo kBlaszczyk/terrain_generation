@@ -61,6 +61,7 @@ object TerrainApplication {
 	}
 
 	private fun update() {
+		Time.update()
 		camera.update()
 		camera.getView(Matrix4f()).transformDirection(lightDirection, csLightDirection).normalize()
 		terrains.forEach(TerrainSceneObject::update)
