@@ -18,7 +18,8 @@ class TerrainShader {
 	private val layerLimitLocations: IntArray
 	private val layerBlendingHeightLocations: IntArray
 	private val layerTexturesLocation: Int
-	private val heightmapLocation: Int
+	private val heightMapLocation: Int
+	private val normalMapLocation: Int
 
 	private val matrixBuffer = FloatArray(16)
 	private val vectorBuffer = FloatArray(3)
@@ -52,11 +53,13 @@ class TerrainShader {
 		}.toIntArray()
 
 		layerTexturesLocation = glGetUniformLocation(handle, "layer_textures")
-		heightmapLocation = glGetUniformLocation(handle, "heightmap")
+		heightMapLocation = glGetUniformLocation(handle, "heightMap")
+		normalMapLocation = glGetUniformLocation(handle, "normalMap")
 
 		bind()
 		glUniform1i(layerTexturesLocation, 0)
-		glUniform1i(heightmapLocation, 1)
+		glUniform1i(heightMapLocation, 1)
+		glUniform1i(normalMapLocation, 2)
 		unbind()
 	}
 
@@ -94,9 +97,14 @@ class TerrainShader {
 		glBindTexture(GL_TEXTURE_2D, textureArrayHandle)
 	}
 
-	fun setHeightmap(heightmapHandle: Int) {
+	fun setHeightMap(handle: Int) {
 		glActiveTexture(GL_TEXTURE1)
-		glBindTexture(GL_TEXTURE_2D, heightmapHandle)
+		glBindTexture(GL_TEXTURE_2D, handle)
+	}
+
+	fun setNormalMap(handle: Int) {
+		glActiveTexture(GL_TEXTURE2)
+		glBindTexture(GL_TEXTURE_2D, handle)
 	}
 
 	fun setTessellationLevels(inner: Float, outer: Float) {

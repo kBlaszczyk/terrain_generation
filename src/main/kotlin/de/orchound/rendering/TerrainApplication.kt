@@ -1,7 +1,9 @@
 package de.orchound.rendering
 
 import de.orchound.rendering.display.Keys
-import de.orchound.rendering.opengl.*
+import de.orchound.rendering.opengl.OpenGLTextureArray
+import de.orchound.rendering.opengl.TerrainShader
+import de.orchound.rendering.opengl.TextureLoader
 import de.orchound.rendering.terrain.*
 import org.joml.Matrix4f
 import org.joml.Vector3f
@@ -20,7 +22,8 @@ object TerrainApplication {
 	private val layerBlendingHeights = FloatArray(10)
 	private val terrainLayout = TerrainLayout()
 	private val textureArray: OpenGLTextureArray
-	private val heightmap: Heightmap
+	private val heightMap: HeightMap
+	private val normalMap: NormalMap
 
 	init {
 		Window.initialize()
@@ -48,7 +51,8 @@ object TerrainApplication {
 		terrainLayout.getBlendingHeights(layerBlendingHeights)
 
 		val noiseMap = NoiseGenerator.generateNoiseMap(terrainWidth.toInt(), 4f)
-		heightmap = Heightmap(noiseMap.width, noiseMap.data, 25f)
+		heightMap = HeightMap(noiseMap.width, noiseMap.data, 25f)
+		normalMap = NormalMap(heightMap)
 		terrains = getTerrains()
 	}
 
@@ -74,7 +78,8 @@ object TerrainApplication {
 		shader.setCsLightDirection(csLightDirection)
 		shader.setLayersCount(terrainLayout.layersCount)
 		shader.setTextureArray(textureArray.handle)
-		shader.setHeightmap(heightmap.handle)
+		shader.setHeightMap(heightMap.handle)
+		shader.setNormalMap(normalMap.handle)
 		shader.setLayerColors(layerColors)
 		shader.setLayerLimits(layerLimits)
 		shader.setLayerBlendingHeights(layerBlendingHeights)

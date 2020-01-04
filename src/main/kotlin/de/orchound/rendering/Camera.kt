@@ -18,7 +18,7 @@ class Camera(aspectRatio: Float, fov: Float, private val boundary: Float) {
 
 	private val fovY = toRadians(fov / aspectRatio)
 	private val nearPlane = 0.5f
-	private val farPlane = 200f
+	private val farPlane = 1000f
 
 	private var mouseSensitivity = 0.1
 	private var mousePosX = 0.0

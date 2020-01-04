@@ -17,9 +17,10 @@ abstract class DataMap(val width: Int, val height: Int, val data: FloatArray) {
 
 class NoiseMap(width: Int, data: FloatArray) : DataMap(width, width, data)
 
-class Heightmap(width: Int, noise: FloatArray, heightFactor: Float) : DataMap(width, width, noise) {
-	val maxHeight: Float
+class HeightMap(width: Int, noise: FloatArray, heightFactor: Float) : DataMap(width, width, noise) {
 	val handle = glGenTextures()
+
+	private val maxHeight: Float
 
 	init {
 		var min = data[0]
