@@ -11,7 +11,7 @@ class Camera(aspectRatio: Float, fov: Float, private val boundary: Float) {
 
 	private val up = UP
 	private val center = Vector3f(0f, 0f, 0f)
-	private val speed = 100f
+	private val speed = 10f
 
 	private var yaw = 0f
 	private var pitch = 0f
@@ -31,7 +31,7 @@ class Camera(aspectRatio: Float, fov: Float, private val boundary: Float) {
 		.setPerspective(fovY, aspectRatio, nearPlane, farPlane)
 
 	fun getView(dest: Matrix4f): Matrix4f = dest.set(viewMatrix)
-	fun getProjectionView(dest: Matrix4f): Matrix4f = projectionMatrix.mul(viewMatrix, dest)
+	fun getViewProjection(dest: Matrix4f): Matrix4f = projectionMatrix.mul(viewMatrix, dest)
 
 	fun update() {
 		updateMousePosition()
@@ -48,6 +48,8 @@ class Camera(aspectRatio: Float, fov: Float, private val boundary: Float) {
 
 		updateView()
 	}
+
+	fun getPosition(dest: Vector3f): Vector3f = dest.set(position)
 
 	private fun updateMousePosition() {
 		val newMousePosX = Window.mousePosX

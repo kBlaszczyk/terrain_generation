@@ -91,14 +91,15 @@ object TerrainApplication {
 	}
 
 	private fun getTerrains(): Collection<TerrainSceneObject> {
-		val terrains = ArrayList<TerrainSceneObject>(9)
-		for (i in -1 .. 1) {
-			for (j in -1 .. 1) {
-				val terrain = TerrainSceneObject(terrainWidth, camera, shader)
-				terrain.translate(Vector3f(i.toFloat(), 0f, j.toFloat()))
-				terrains.add(terrain)
-			}
-		}
-		return terrains
+//		val terrains = ArrayList<TerrainSceneObject>(9)
+//		for (i in -1 .. 1) {
+//			for (j in -1 .. 1) {
+//				val terrain = TerrainSceneObject(terrainWidth, camera, shader)
+//				terrain.translate(Vector3f(i.toFloat(), 0f, j.toFloat()))
+//				terrains.add(terrain)
+//			}
+//		}
+//		return terrains
+		return listOf(TerrainSceneObject(terrainWidth, camera, shader))
 	}
 }
