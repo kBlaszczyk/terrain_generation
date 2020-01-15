@@ -1,6 +1,7 @@
 package de.orchound.rendering.opengl
 
 import org.joml.Matrix4f
+import org.joml.Vector2f
 import org.joml.Vector3f
 import org.lwjgl.opengl.GL40.*
 
@@ -20,11 +21,13 @@ class TerrainShader {
 	private val layerTexturesLocation: Int
 	private val heightMapLocation: Int
 	private val normalMapLocation: Int
+	private val tessellationOriginLocation: Int
+	private val tessellationWidthLocation: Int
 
 	private val matrixBuffer = FloatArray(16)
-	private val vectorBuffer = FloatArray(3)
-	private val innerTessellationLevelBuffer = FloatArray(4)
-	private val outerTessellationLevelBuffer = FloatArray(2)
+	private val vec3Buffer = FloatArray(3)
+	private val vec2Buffer = FloatArray(2)
+	private val vec4Buffer = FloatArray(4)
 
 	init {
 		val vertexShaderSource = loadShaderSource("/shader/TerrainShader_vs.glsl")
@@ -41,6 +44,9 @@ class TerrainShader {
 		modelViewLocation = getUniformLocation("model_view")
 		modelViewProjectionLocation = getUniformLocation("model_view_projection")
 		csLightDirectionLocation = getUniformLocation("light_direction_cs")
+		tessellationOriginLocation = getUniformLocation("tessellation_origin")
+		tessellationWidthLocation = getUniformLocation("tessellation_width")
+
 		layersCountLocation = getUniformLocation("layers_count")
 		layerColorLocations = (0 until MAX_LAYERS).map {
 			getUniformLocation("layer_colors[$it]")
@@ -73,12 +79,14 @@ class TerrainShader {
 	fun setModel(matrix: Matrix4f) = setUniformMatrix(modelLocation, matrix)
 	fun setModelView(matrix: Matrix4f) = setUniformMatrix(modelViewLocation, matrix)
 	fun setModelViewProjection(matrix: Matrix4f) = setUniformMatrix(modelViewProjectionLocation, matrix)
-	fun setCsLightDirection(vector: Vector3f) = setUniformVector(csLightDirectionLocation, vector)
+	fun setCsLightDirection(vector: Vector3f) = setUniformVector3(csLightDirectionLocation, vector)
+	fun setTessellationOrigin(vector: Vector2f) = setUniformVector2(tessellationOriginLocation, vector)
+	fun setTessellationWidth(width: Float) = setUniformFloat(tessellationWidthLocation, width)
 	fun setLayersCount(value: Int) = glUniform1i(layersCountLocation, value)
 
 	fun setLayerColors(colors: Array<Vector3f>) {
 		for (index in colors.indices) {
-			setUniformVector(layerColorLocations[index], colors[index])
+			setUniformVector3(layerColorLocations[index], colors[index])
 		}
 	}
 
@@ -108,10 +116,10 @@ class TerrainShader {
 	}
 
 	fun setTessellationLevels(inner: Float, outer: Float) {
-		innerTessellationLevelBuffer.fill(inner)
-		glPatchParameterfv(GL_PATCH_DEFAULT_INNER_LEVEL, innerTessellationLevelBuffer)
-		outerTessellationLevelBuffer.fill(outer)
-		glPatchParameterfv(GL_PATCH_DEFAULT_OUTER_LEVEL, outerTessellationLevelBuffer)
+		vec4Buffer.fill(inner)
+		glPatchParameterfv(GL_PATCH_DEFAULT_INNER_LEVEL, vec4Buffer)
+		vec2Buffer.fill(outer)
+		glPatchParameterfv(GL_PATCH_DEFAULT_OUTER_LEVEL, vec2Buffer)
 	}
 
 	private fun getUniformLocation(name: String) = glGetUniformLocation(handle, name)
@@ -123,12 +131,17 @@ class TerrainShader {
 		}
 	}
 
-	private fun setUniformVector(location: Int, vector: Vector3f) {
+	private fun setUniformVector2(location: Int, vector: Vector2f) {
+		if (location != -1)
+			glUniform2f(location, vector.x, vector.y)
+	}
+
+	private fun setUniformVector3(location: Int, vector: Vector3f) {
 		if (location != -1) {
-			vectorBuffer[0] = vector.x
-			vectorBuffer[1] = vector.y
-			vectorBuffer[2] = vector.z
-			glUniform3fv(location, vectorBuffer)
+			vec3Buffer[0] = vector.x
+			vec3Buffer[1] = vector.y
+			vec3Buffer[2] = vector.z
+			glUniform3fv(location, vec3Buffer)
 		}
 	}
 

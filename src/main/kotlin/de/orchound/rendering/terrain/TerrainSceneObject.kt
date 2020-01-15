@@ -14,7 +14,7 @@ class TerrainSceneObject(
 	private val modelView = Matrix4f()
 	private val modelViewProjection = Matrix4f()
 	private val drawDeterminer = DrawDeterminer(camera)
-	private val quadTree = QuadTree(2048f, drawDeterminer, model, camera, shader)
+	private val quadTree = QuadTree(width, drawDeterminer, model, camera, shader)
 
 	fun update() {
 		drawDeterminer.update()

@@ -9,7 +9,6 @@ import org.joml.Vector2f
 class QuadTree(
 	val width: Float, drawDeterminer: DrawDeterminer, model: Matrix4f, camera: Camera, shader: TerrainShader
 ) {
-	private val root = QuadNode(Vector2f(0f), width, 0, drawDeterminer, camera, shader)
-
+	private val root = QuadNode(drawDeterminer, camera, shader, Vector2f(0f), width, 0, width);
 	fun draw() = root.draw()
 }

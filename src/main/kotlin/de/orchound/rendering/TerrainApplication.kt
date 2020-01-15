@@ -50,7 +50,7 @@ object TerrainApplication {
 		terrainLayout.getLimits(layerLimits)
 		terrainLayout.getBlendingHeights(layerBlendingHeights)
 
-		val noiseMap = NoiseGenerator.generateNoiseMap(terrainWidth.toInt(), 4f)
+		val noiseMap = NoiseGenerator.generateNoiseMap(terrainWidth.toInt(), 1f)
 		heightMap = HeightMap(noiseMap.width, noiseMap.data, 25f)
 		normalMap = NormalMap(heightMap)
 		terrains = getTerrains()
@@ -100,6 +100,6 @@ object TerrainApplication {
 //			}
 //		}
 //		return terrains
-		return listOf(TerrainSceneObject(terrainWidth, camera, shader))
+		return listOf(TerrainSceneObject(128f, camera, shader))
 	}
 }

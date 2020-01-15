@@ -1,7 +1,4 @@
 package de.orchound.rendering
 
 
-@ExperimentalUnsignedTypes
-fun main() {
-	TerrainApplication.run()
-}
+fun main() = TerrainApplication.run()
