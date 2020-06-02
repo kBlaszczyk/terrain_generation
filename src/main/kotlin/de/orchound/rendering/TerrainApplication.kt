@@ -2,8 +2,10 @@ package de.orchound.rendering
 
 import de.orchound.rendering.display.Keys
 import de.orchound.rendering.opengl.OpenGLTextureArray
-import de.orchound.rendering.opengl.TerrainShader
 import de.orchound.rendering.opengl.TextureLoader
+import de.orchound.rendering.shaderutility.OpenGLShader
+import de.orchound.rendering.shaderutility.ShaderCreator
+import de.orchound.rendering.shaderutility.ShaderSourceBundle
 import de.orchound.rendering.terrain.*
 import org.joml.Matrix4f
 import org.joml.Vector3f
@@ -12,7 +14,8 @@ import org.joml.Vector3f
 object TerrainApplication {
 	private val terrainWidth = 512f
 	private val camera = Camera(Window.aspectRatio, 90f, terrainWidth)
-	private val shader: TerrainShader
+	private val shader: OpenGLShader
+	private val material: TerrainMaterial
 	private val terrains: Collection<TerrainSceneObject>
 
 	private val lightDirection = Vector3f(-10f)
@@ -27,7 +30,16 @@ object TerrainApplication {
 
 	init {
 		Window.initialize()
-		shader = TerrainShader()
+
+		val shaderSources = ShaderSourceBundle(
+			loadTextResource("/shader/TerrainShader_vs.glsl"),
+			loadTextResource("/shader/TerrainShader_fs.glsl"),
+			tessellationControlShader = loadTextResource("/shader/TerrainShader_tcs.glsl"),
+			tessellationEvaluationShader = loadTextResource("/shader/TerrainShader_tes.glsl")
+		)
+		shader = ShaderCreator().createShader(shaderSources)
+		material = TerrainMaterial(shader, 10)
+
 		textureArray = TextureLoader.loadTextureArray(
 			"/textures/water.png",
 			"/textures/sandy_grass.png",
@@ -75,14 +87,13 @@ object TerrainApplication {
 		Window.prepareFrame()
 		shader.bind()
 
-		shader.setCsLightDirection(csLightDirection)
-		shader.setLayersCount(terrainLayout.layersCount)
-		shader.setTextureArray(textureArray.handle)
-		shader.setHeightMap(heightMap.handle)
-		shader.setNormalMap(normalMap.handle)
-		shader.setLayerColors(layerColors)
-		shader.setLayerLimits(layerLimits)
-		shader.setLayerBlendingHeights(layerBlendingHeights)
+		material.setCsLightDirection(csLightDirection)
+		material.setLayersCount(terrainLayout.layersCount)
+		material.setTextureArray(textureArray.handle)
+		material.setHeightMap(heightMap.handle)
+		material.setNormalMap(normalMap.handle)
+		material.setLayerLimits(layerLimits)
+		material.setLayerBlendingHeights(layerBlendingHeights)
 
 		terrains.forEach(TerrainSceneObject::draw)
 
@@ -100,6 +111,12 @@ object TerrainApplication {
 //			}
 //		}
 //		return terrains
-		return listOf(TerrainSceneObject(128f, camera, shader))
+		return listOf(TerrainSceneObject(128f, camera, material))
+	}
+
+	private fun loadTextResource(resource: String): String {
+		return javaClass.getResourceAsStream(resource).use { inputStream ->
+			inputStream.bufferedReader().readText()
+		}
 	}
 }
