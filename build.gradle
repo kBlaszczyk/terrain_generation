@@ -3,7 +3,7 @@ import org.gradle.internal.os.OperatingSystem
 plugins {
 	id "application"
 	id "idea"
-	id "org.jetbrains.kotlin.jvm" version "1.3.50"
+	id "org.jetbrains.kotlin.jvm" version "1.3.72"
 }
 
 switch (OperatingSystem.current()) {
@@ -65,11 +65,27 @@ dependencies {
 			"org.lwjgl:lwjgl-opengl::$lwjgl_natives",
 			"org.lwjgl:lwjgl-stb::$lwjgl_natives",
 	)
+
+	testImplementation(
+			"org.junit.jupiter:junit-jupiter-engine:5.6.2"
+	)
+
+	testCompile(
+			"io.kotlintest:kotlintest-runner-junit5:3.4.2",
+	)
+
+//	testImplementation(
+//			"io.mockk:mockk:1.8.13",
+//	)
 }
 
 // -------------------------------------------------------------
 // --- Tasks ---------------------------------------------------
 // -------------------------------------------------------------
+
+test {
+	useJUnitPlatform {}
+}
 
 jar {
 	manifest {
