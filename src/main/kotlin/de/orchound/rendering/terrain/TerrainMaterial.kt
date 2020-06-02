@@ -1,6 +1,7 @@
 package de.orchound.rendering.terrain
 
 import de.orchound.rendering.shaderutility.OpenGLShader
+import de.orchound.rendering.shaderutility.UniformJomlHelper
 import org.joml.Matrix4f
 import org.joml.Vector2f
 import org.joml.Vector3f
@@ -10,11 +11,13 @@ import java.nio.FloatBuffer
 
 class TerrainMaterial(private val shader: OpenGLShader, layersCount: Int) {
 
-	private val modelSetter = shader.getMatrix4Setter("model")
-	private val modelViewSetter = shader.getMatrix4Setter("model_view")
-	private val modelViewProjectionSetter = shader.getMatrix4Setter("model_view_projection")
-	private val lightDirectionSetter = shader.getVector3Setter("light_direction_cs")
-	private val tessellationOriginSetter = shader.getVector2Setter("tessellation_origin")
+	private val jomlHelper = UniformJomlHelper(shader)
+
+	private val modelSetter = jomlHelper.getMat4Setter("model")
+	private val modelViewSetter = jomlHelper.getMat4Setter("model_view")
+	private val modelViewProjectionSetter = jomlHelper.getMat4Setter("model_view_projection")
+	private val lightDirectionSetter = jomlHelper.getVec3Setter("light_direction_cs")
+	private val tessellationOriginSetter = jomlHelper.getVec2Setter("tessellation_origin")
 	private val tessellationWidthSetter = shader.getFloatSetter("tessellation_width")
 	private val layersCountSetter = shader.getIntSetter("layers_count")
 	private val layerLimitsSetter = shader.getFloatArraySetter("layer_limits")
