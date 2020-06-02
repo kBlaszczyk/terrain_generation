@@ -59,8 +59,8 @@ class TerrainShader {
 		}.toIntArray()
 
 		layerTexturesLocation = glGetUniformLocation(handle, "layer_textures")
-		heightMapLocation = glGetUniformLocation(handle, "heightMap")
-		normalMapLocation = glGetUniformLocation(handle, "normalMap")
+		heightMapLocation = glGetUniformLocation(handle, "height_map")
+		normalMapLocation = glGetUniformLocation(handle, "normal_map")
 
 		bind()
 		glUniform1i(layerTexturesLocation, 0)
@@ -137,12 +137,8 @@ class TerrainShader {
 	}
 
 	private fun setUniformVector3(location: Int, vector: Vector3f) {
-		if (location != -1) {
-			vec3Buffer[0] = vector.x
-			vec3Buffer[1] = vector.y
-			vec3Buffer[2] = vector.z
-			glUniform3fv(location, vec3Buffer)
-		}
+		if (location != -1)
+			glUniform3f(location, vector.x, vector.y, vector.z)
 	}
 
 	private fun setUniformFloat(location: Int, value: Float) {
@@ -164,8 +160,6 @@ class TerrainShader {
 		glAttachShader(programHandle, tessellationControlShaderHandle)
 		glAttachShader(programHandle, tessellationEvaluationShaderHandle)
 		glAttachShader(programHandle, fragmentShaderHandle)
-
-		glBindAttribLocation(programHandle, 0, "in_position")
 
 		glLinkProgram(programHandle)
 
@@ -199,11 +193,11 @@ class TerrainShader {
 		return shaderId
 	}
 
-	private fun getProgramInfoLog(programId:Int):String {
+	private fun getProgramInfoLog(programId:Int): String {
 		return glGetProgramInfoLog(programId, GL_INFO_LOG_LENGTH)
 	}
 
-	private fun getShaderInfoLog(shaderId:Int):String {
+	private fun getShaderInfoLog(shaderId:Int): String {
 		return glGetShaderInfoLog(shaderId, GL_INFO_LOG_LENGTH)
 	}
 
