@@ -1,7 +1,7 @@
 package de.orchound.rendering.terrain
 
-import de.orchound.rendering.shaderutility.OpenGLShader
-import de.orchound.rendering.shaderutility.UniformJomlHelper
+import de.orchound.shaderutility.OpenGLShader
+import de.orchound.shaderutility.UniformJomlHelper
 import org.joml.Matrix4f
 import org.joml.Vector2f
 import org.joml.Vector3f

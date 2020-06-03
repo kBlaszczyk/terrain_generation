@@ -40,10 +40,12 @@ mainClassName = project.main_class
 
 repositories {
 	mavenCentral()
+	mavenLocal()
 }
 
 dependencies {
 	implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+	implementation "de.orchound:shader-utility:1.0-SNAPSHOT"
 
 	compile(
 			"org.joml:joml:$joml_version",

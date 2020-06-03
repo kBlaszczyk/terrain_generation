@@ -3,10 +3,10 @@ package de.orchound.rendering
 import de.orchound.rendering.display.Keys
 import de.orchound.rendering.opengl.OpenGLTextureArray
 import de.orchound.rendering.opengl.TextureLoader
-import de.orchound.rendering.shaderutility.OpenGLShader
-import de.orchound.rendering.shaderutility.ShaderCreator
-import de.orchound.rendering.shaderutility.ShaderSourceBundle
 import de.orchound.rendering.terrain.*
+import de.orchound.shaderutility.OpenGLShader
+import de.orchound.shaderutility.ShaderCreator
+import de.orchound.shaderutility.ShaderSourceBundle
 import org.joml.Matrix4f
 import org.joml.Vector3f
 
@@ -37,7 +37,7 @@ object TerrainApplication {
 			tessellationControlShader = loadTextResource("/shader/TerrainShader_tcs.glsl"),
 			tessellationEvaluationShader = loadTextResource("/shader/TerrainShader_tes.glsl")
 		)
-		shader = ShaderCreator().createShader(shaderSources)
+		shader = ShaderCreator.createShader(shaderSources)
 		material = TerrainMaterial(shader, 10)
 
 		textureArray = TextureLoader.loadTextureArray(
